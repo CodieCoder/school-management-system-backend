@@ -1,0 +1,1005 @@
+{
+  "info": {
+    "name": "Axion School Management API",
+    "description": "Phase 1 + 2: Auth, Users, Schools, Roles, Permissions, Classrooms, Students",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5111/api" },
+    { "key": "token", "value": "" },
+    { "key": "teacherToken", "value": "" },
+    { "key": "schoolId", "value": "" },
+    { "key": "roleId", "value": "" },
+    { "key": "newUserId", "value": "" },
+    { "key": "classroomId", "value": "" },
+    { "key": "classroom2Id", "value": "" },
+    { "key": "studentId", "value": "" },
+    { "key": "student2Id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (Superadmin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@axion.local\",\n  \"password\": \"changeme123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.ok) {",
+                  "    pm.collectionVariables.set('token', res.data.token);",
+                  "    pm.test('Login successful', () => pm.expect(res.ok).to.be.true);",
+                  "} else {",
+                  "    pm.test('Login failed: ' + res.message, () => pm.expect.fail());",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"teacher@school.com\",\n  \"password\": \"teachpass123\",\n  \"displayName\": \"Jane Teacher\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.ok) {",
+                  "    pm.collectionVariables.set('newUserId', res.data.user._id);",
+                  "    pm.test('User registered', () => pm.expect(res.ok).to.be.true);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login (Teacher)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"teacher@school.com\",\n  \"password\": \"teachpass123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.ok) {",
+                  "    pm.collectionVariables.set('teacherToken', res.data.token);",
+                  "    pm.test('Teacher login successful', () => pm.expect(res.ok).to.be.true);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/user/getProfile", "host": ["{{baseUrl}}"], "path": ["user", "getProfile"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Profile loaded', () => pm.expect(res.ok).to.be.true);",
+                  "pm.test('Has memberships', () => pm.expect(res.data.memberships).to.be.an('array'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Schools",
+      "item": [
+        {
+          "name": "Create School",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Shelbyville Academy\",\n  \"address\": \"456 Oak Ave\",\n  \"phone\": \"+9876543210\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/school/createSchool", "host": ["{{baseUrl}}"], "path": ["school", "createSchool"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.ok) {",
+                  "    pm.collectionVariables.set('schoolId', res.data.school._id);",
+                  "    pm.test('School created', () => pm.expect(res.ok).to.be.true);",
+                  "    pm.test('Owner role assigned', () => pm.expect(res.data.membership.roleName).to.eql('owner'));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Schools",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/school/getSchools", "host": ["{{baseUrl}}"], "path": ["school", "getSchools"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Schools listed', () => pm.expect(res.ok).to.be.true);",
+                  "pm.test('At least one school', () => pm.expect(res.data.length).to.be.greaterThan(0));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get School by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/school/getSchool?schoolId={{schoolId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "getSchool"],
+              "query": [{ "key": "schoolId", "value": "{{schoolId}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('School found', () => pm.expect(res.ok).to.be.true);",
+                  "pm.test('Has name', () => pm.expect(res.data.name).to.be.a('string'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update School",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"schoolId\": \"{{schoolId}}\",\n  \"name\": \"Shelbyville Academy (Updated)\",\n  \"address\": \"789 New Blvd\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/school/updateSchool", "host": ["{{baseUrl}}"], "path": ["school", "updateSchool"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('School updated', () => pm.expect(res.ok).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add Member to School",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"schoolId\": \"{{schoolId}}\",\n  \"userId\": \"{{newUserId}}\",\n  \"roleId\": \"{{roleId}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/school/addMember", "host": ["{{baseUrl}}"], "path": ["school", "addMember"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Member added', () => pm.expect(res.ok).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Remove Member from School",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"schoolId\": \"{{schoolId}}\",\n  \"userId\": \"{{newUserId}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/school/removeMember", "host": ["{{baseUrl}}"], "path": ["school", "removeMember"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Member removed', () => pm.expect(res.ok).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete School",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"schoolId\": \"{{schoolId}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/school/deleteSchool", "host": ["{{baseUrl}}"], "path": ["school", "deleteSchool"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('School deleted', () => pm.expect(res.ok).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Roles",
+      "item": [
+        {
+          "name": "Create Role",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"schoolId\": \"{{schoolId}}\",\n  \"name\": \"teacher\",\n  \"permissions\": [\"school:read\", \"school:manage_members\"]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/role/createRole", "host": ["{{baseUrl}}"], "path": ["role", "createRole"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.ok) {",
+                  "    pm.collectionVariables.set('roleId', res.data._id);",
+                  "    pm.test('Role created', () => pm.expect(res.ok).to.be.true);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Roles for School",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/role/getRoles?schoolId={{schoolId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["role", "getRoles"],
+              "query": [{ "key": "schoolId", "value": "{{schoolId}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Roles listed', () => pm.expect(res.ok).to.be.true);",
+                  "pm.test('Has owner role', () => pm.expect(res.data.some(r => r.name === 'owner')).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Role",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleId\": \"{{roleId}}\",\n  \"name\": \"senior teacher\",\n  \"permissions\": [\"school:read\", \"school:update\", \"school:manage_members\"]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/role/updateRole", "host": ["{{baseUrl}}"], "path": ["role", "updateRole"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Role updated', () => pm.expect(res.ok).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Role",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleId\": \"{{roleId}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/role/deleteRole", "host": ["{{baseUrl}}"], "path": ["role", "deleteRole"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Role deleted', () => pm.expect(res.ok).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Permissions",
+      "item": [
+        {
+          "name": "Get All Permissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/permission/getPermissions", "host": ["{{baseUrl}}"], "path": ["permission", "getPermissions"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Permissions listed', () => pm.expect(res.ok).to.be.true);",
+                  "pm.test('Has permissions', () => pm.expect(res.data.length).to.be.greaterThan(0));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Classrooms",
+      "item": [
+        {
+          "name": "Create Classroom",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Math 101\",\n  \"schoolId\": \"{{schoolId}}\",\n  \"capacity\": 25\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/classroom/createClassroom", "host": ["{{baseUrl}}"], "path": ["classroom", "createClassroom"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.ok) {",
+                  "    pm.collectionVariables.set('classroomId', res.data._id);",
+                  "    pm.test('Classroom created', () => pm.expect(res.ok).to.be.true);",
+                  "    pm.test('Has schoolId', () => pm.expect(res.data.schoolId).to.eql(pm.collectionVariables.get('schoolId')));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Classroom 2",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Science Lab\",\n  \"schoolId\": \"{{schoolId}}\",\n  \"capacity\": 20,\n  \"resources\": [\"microscopes\", \"lab coats\"]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/classroom/createClassroom", "host": ["{{baseUrl}}"], "path": ["classroom", "createClassroom"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.ok) {",
+                  "    pm.collectionVariables.set('classroom2Id', res.data._id);",
+                  "    pm.test('Classroom 2 created', () => pm.expect(res.ok).to.be.true);",
+                  "    pm.test('Has resources', () => pm.expect(res.data.resources.length).to.eql(2));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Classrooms for School",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/classroom/getClassrooms?schoolId={{schoolId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["classroom", "getClassrooms"],
+              "query": [{ "key": "schoolId", "value": "{{schoolId}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Classrooms listed', () => pm.expect(res.ok).to.be.true);",
+                  "pm.test('Has classrooms', () => pm.expect(res.data.length).to.be.greaterThan(0));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Classroom by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/classroom/getClassroom?classroomId={{classroomId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["classroom", "getClassroom"],
+              "query": [{ "key": "classroomId", "value": "{{classroomId}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Classroom found', () => pm.expect(res.ok).to.be.true);",
+                  "pm.test('Has name', () => pm.expect(res.data.name).to.be.a('string'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Classroom",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"classroomId\": \"{{classroomId}}\",\n  \"name\": \"Advanced Math 201\",\n  \"capacity\": 30\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/classroom/updateClassroom", "host": ["{{baseUrl}}"], "path": ["classroom", "updateClassroom"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Classroom updated', () => pm.expect(res.ok).to.be.true);",
+                  "pm.test('Name changed', () => pm.expect(res.data.name).to.eql('Advanced Math 201'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Classroom",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"classroomId\": \"{{classroom2Id}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/classroom/deleteClassroom", "host": ["{{baseUrl}}"], "path": ["classroom", "deleteClassroom"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Classroom deleted', () => pm.expect(res.ok).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Students",
+      "item": [
+        {
+          "name": "Create Student (no classroom)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Alice Johnson\",\n  \"email\": \"alice@students.dev\",\n  \"schoolId\": \"{{schoolId}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/student/createStudent", "host": ["{{baseUrl}}"], "path": ["student", "createStudent"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.ok) {",
+                  "    pm.collectionVariables.set('studentId', res.data._id);",
+                  "    pm.test('Student created', () => pm.expect(res.ok).to.be.true);",
+                  "    pm.test('No classroom assigned', () => pm.expect(res.data.classroomId).to.be.null);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Student (with classroom)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Bob Smith\",\n  \"email\": \"bob@students.dev\",\n  \"schoolId\": \"{{schoolId}}\",\n  \"classroomId\": \"{{classroomId}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/student/createStudent", "host": ["{{baseUrl}}"], "path": ["student", "createStudent"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.ok) {",
+                  "    pm.collectionVariables.set('student2Id', res.data._id);",
+                  "    pm.test('Student created with classroom', () => pm.expect(res.ok).to.be.true);",
+                  "    pm.test('Classroom assigned', () => pm.expect(res.data.classroomId).to.eql(pm.collectionVariables.get('classroomId')));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Students (all in school)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/student/getStudents?schoolId={{schoolId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["student", "getStudents"],
+              "query": [{ "key": "schoolId", "value": "{{schoolId}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Students listed', () => pm.expect(res.ok).to.be.true);",
+                  "pm.test('At least 2 students', () => pm.expect(res.data.length).to.be.greaterThan(1));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Students (by classroom)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/student/getStudents?schoolId={{schoolId}}&classroomId={{classroomId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["student", "getStudents"],
+              "query": [
+                { "key": "schoolId", "value": "{{schoolId}}" },
+                { "key": "classroomId", "value": "{{classroomId}}" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Filtered by classroom', () => pm.expect(res.ok).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Student by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/student/getStudent?studentId={{studentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["student", "getStudent"],
+              "query": [{ "key": "studentId", "value": "{{studentId}}" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Student found', () => pm.expect(res.ok).to.be.true);",
+                  "pm.test('Has name', () => pm.expect(res.data.name).to.eql('Alice Johnson'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Student (assign classroom)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"classroomId\": \"{{classroomId}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/student/updateStudent", "host": ["{{baseUrl}}"], "path": ["student", "updateStudent"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Student updated', () => pm.expect(res.ok).to.be.true);",
+                  "pm.test('Classroom assigned', () => pm.expect(res.data.classroomId).to.eql(pm.collectionVariables.get('classroomId')));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Transfer Student",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{student2Id}}\",\n  \"newSchoolId\": \"REPLACE_WITH_ANOTHER_SCHOOL_ID\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/student/transferStudent", "host": ["{{baseUrl}}"], "path": ["student", "transferStudent"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.ok) {",
+                  "    pm.test('Student transferred', () => pm.expect(res.ok).to.be.true);",
+                  "    pm.test('Classroom cleared', () => pm.expect(res.data.classroomId).to.be.null);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Student",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "token", "value": "{{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{student2Id}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/student/deleteStudent", "host": ["{{baseUrl}}"], "path": ["student", "deleteStudent"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Student deleted', () => pm.expect(res.ok).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Permission Tests",
+      "description": "Tests that verify RBAC enforcement",
+      "item": [
+        {
+          "name": "Teacher: Get Schools (allowed)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "token", "value": "{{teacherToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/school/getSchools", "host": ["{{baseUrl}}"], "path": ["school", "getSchools"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Teacher can list schools', () => pm.expect(res.ok).to.be.true);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Teacher: Update School (denied)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "token", "value": "{{teacherToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"schoolId\": \"{{schoolId}}\",\n  \"name\": \"Hacked School\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/school/updateSchool", "host": ["{{baseUrl}}"], "path": ["school", "updateSchool"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Teacher denied update', () => pm.expect(res.ok).to.be.false);",
+                  "pm.test('Permission denied message', () => pm.expect(res.message).to.eql('permission denied'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Teacher: Delete School (denied)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "token", "value": "{{teacherToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"schoolId\": \"{{schoolId}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/school/deleteSchool", "host": ["{{baseUrl}}"], "path": ["school", "deleteSchool"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Teacher denied delete', () => pm.expect(res.ok).to.be.false);",
+                  "pm.test('Permission denied message', () => pm.expect(res.message).to.eql('permission denied'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "No Token: Get Schools (unauthorized)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/school/getSchools", "host": ["{{baseUrl}}"], "path": ["school", "getSchools"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('Rejected without token', () => pm.expect(res.ok).to.be.false);",
+                  "pm.test('Token required message', () => pm.expect(res.message).to.eql('token required'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
