@@ -24,7 +24,10 @@ module.exports = class ClassroomManager {
     }
 
     async createClassroom({ __auth, name, schoolId, capacity, resources }) {
+        if (!name || name.trim().length < 1) return { error: 'name is required' };
         schoolId = this._resolveSchoolId(__auth, schoolId);
+        if (!schoolId) return { error: 'schoolId is required' };
+
         let result = await this.validators.createClassroom({ name, schoolId });
         if (result) return result;
 

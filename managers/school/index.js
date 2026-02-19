@@ -24,6 +24,8 @@ module.exports = class SchoolManager {
     }
 
     async createSchool({ __auth, name, address, phone }) {
+        if (!name || name.trim().length < 1) return { error: 'name is required' };
+
         let result = await this.validators.createSchool({ name });
         if (result) return result;
 
