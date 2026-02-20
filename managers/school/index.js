@@ -105,6 +105,14 @@ module.exports = class SchoolManager {
         },
       },
       {
+        $lookup: {
+          from: "resources",
+          localField: "_id",
+          foreignField: "schoolId",
+          as: "resources",
+        },
+      },
+      {
         $addFields: {
           totalClassrooms: { $size: "$classrooms" },
           totalStudents: { $size: "$students" },
@@ -112,6 +120,23 @@ module.exports = class SchoolManager {
             $size: {
               $filter: {
                 input: "$students",
+                cond: { $eq: ["$$this.classroomId", null] },
+              },
+            },
+          },
+          totalResources: { $size: "$resources" },
+          activeResources: {
+            $size: {
+              $filter: {
+                input: "$resources",
+                cond: { $eq: ["$$this.isActive", true] },
+              },
+            },
+          },
+          schoolWideResources: {
+            $size: {
+              $filter: {
+                input: "$resources",
                 cond: { $eq: ["$$this.classroomId", null] },
               },
             },
@@ -128,6 +153,14 @@ module.exports = class SchoolManager {
                   $size: {
                     $filter: {
                       input: "$students",
+                      cond: { $eq: ["$$this.classroomId", "$$c._id"] },
+                    },
+                  },
+                },
+                resourceCount: {
+                  $size: {
+                    $filter: {
+                      input: "$resources",
                       cond: { $eq: ["$$this.classroomId", "$$c._id"] },
                     },
                   },
@@ -162,7 +195,7 @@ module.exports = class SchoolManager {
           },
         },
       },
-      { $project: { students: 0 } },
+      { $project: { students: 0, resources: 0 } },
     ];
 
     const results = await School.aggregate(pipeline);

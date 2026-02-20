@@ -261,6 +261,9 @@ const options = {
                       totalClassrooms: { type: "integer" },
                       totalStudents: { type: "integer" },
                       unassignedStudents: { type: "integer" },
+                      totalResources: { type: "integer" },
+                      activeResources: { type: "integer" },
+                      schoolWideResources: { type: "integer" },
                       classrooms: {
                         type: "array",
                         items: {
@@ -270,6 +273,7 @@ const options = {
                             name: { type: "string" },
                             capacity: { type: "integer" },
                             studentCount: { type: "integer" },
+                            resourceCount: { type: "integer" },
                             utilization: { type: "number", example: 83.3 },
                           },
                         },

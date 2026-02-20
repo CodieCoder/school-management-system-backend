@@ -127,6 +127,29 @@ describe("GET /api/school/getSchoolStats", () => {
       .post("/api/student/createStudent")
       .set("token", adminToken)
       .send({ name: "Charlie", schoolId: statsSchoolId });
+
+    await request
+      .post("/api/resource/createResource")
+      .set("token", adminToken)
+      .send({ name: "Projector", schoolId: statsSchoolId, quantity: 2 });
+    await request
+      .post("/api/resource/createResource")
+      .set("token", adminToken)
+      .send({
+        name: "Microscopes",
+        schoolId: statsSchoolId,
+        classroomId,
+        quantity: 10,
+      });
+    await request
+      .post("/api/resource/createResource")
+      .set("token", adminToken)
+      .send({
+        name: "Broken Chairs",
+        schoolId: statsSchoolId,
+        isActive: false,
+        quantity: 5,
+      });
   });
 
   it("should return school stats with classroom breakdown", async () => {
@@ -145,14 +168,20 @@ describe("GET /api/school/getSchoolStats", () => {
     expect(data.unassignedStudents).toBe(1);
     expect(data.classrooms).toHaveLength(2);
 
+    expect(data.totalResources).toBe(3);
+    expect(data.activeResources).toBe(2);
+    expect(data.schoolWideResources).toBe(2);
+
     const roomA = data.classrooms.find((c) => c.name === "Room A");
     expect(roomA.studentCount).toBe(2);
     expect(roomA.capacity).toBe(30);
     expect(roomA.utilization).toBeCloseTo(6.7, 0);
+    expect(roomA.resourceCount).toBe(1);
 
     const roomB = data.classrooms.find((c) => c.name === "Room B");
     expect(roomB.studentCount).toBe(0);
     expect(roomB.utilization).toBe(0);
+    expect(roomB.resourceCount).toBe(0);
   });
 
   it("should return error for missing schoolId", async () => {
