@@ -1,13 +1,20 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const ClassroomSchema = new mongoose.Schema({
-    name:      { type: String, required: true },
-    schoolId:  { type: mongoose.Schema.Types.ObjectId, ref: 'School', required: true },
-    capacity:  { type: Number, default: 30 },
+const ClassroomSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    schoolId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "School",
+      required: true,
+    },
+    capacity: { type: Number, default: 30 },
     resources: [{ type: String }],
-}, { timestamps: true });
+  },
+  { timestamps: true },
+);
 
 ClassroomSchema.index({ schoolId: 1 });
 ClassroomSchema.index({ schoolId: 1, name: 1 }, { unique: true });
 
-module.exports = mongoose.model('Classroom', ClassroomSchema);
+module.exports = mongoose.model("Classroom", ClassroomSchema);

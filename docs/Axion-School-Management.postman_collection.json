@@ -24,14 +24,16 @@
           "name": "Login (Superadmin)",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"admin@axion.local\",\n  \"password\": \"changeme123\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
           },
           "event": [
             {
@@ -63,7 +65,11 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"teacher@school.com\",\n  \"password\": \"teachpass123\",\n  \"displayName\": \"Jane Teacher\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
           },
           "event": [
             {
@@ -85,14 +91,16 @@
           "name": "Login (Teacher)",
           "request": {
             "method": "POST",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"teacher@school.com\",\n  \"password\": \"teachpass123\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
           },
           "event": [
             {
@@ -119,10 +127,12 @@
           "name": "Get Profile",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "token", "value": "{{token}}" }
-            ],
-            "url": { "raw": "{{baseUrl}}/user/getProfile", "host": ["{{baseUrl}}"], "path": ["user", "getProfile"] }
+            "header": [{ "key": "token", "value": "{{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/user/getProfile",
+              "host": ["{{baseUrl}}"],
+              "path": ["user", "getProfile"]
+            }
           },
           "event": [
             {
@@ -155,7 +165,11 @@
               "mode": "raw",
               "raw": "{\n  \"name\": \"Shelbyville Academy\",\n  \"address\": \"456 Oak Ave\",\n  \"phone\": \"+9876543210\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/school/createSchool", "host": ["{{baseUrl}}"], "path": ["school", "createSchool"] }
+            "url": {
+              "raw": "{{baseUrl}}/school/createSchool",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "createSchool"]
+            }
           },
           "event": [
             {
@@ -178,10 +192,12 @@
           "name": "Get Schools",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "token", "value": "{{token}}" }
-            ],
-            "url": { "raw": "{{baseUrl}}/school/getSchools", "host": ["{{baseUrl}}"], "path": ["school", "getSchools"] }
+            "header": [{ "key": "token", "value": "{{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/school/getSchools",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "getSchools"]
+            }
           },
           "event": [
             {
@@ -201,9 +217,7 @@
           "name": "Get School by ID",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "token", "value": "{{token}}" }
-            ],
+            "header": [{ "key": "token", "value": "{{token}}" }],
             "url": {
               "raw": "{{baseUrl}}/school/getSchool?schoolId={{schoolId}}",
               "host": ["{{baseUrl}}"],
@@ -237,7 +251,11 @@
               "mode": "raw",
               "raw": "{\n  \"schoolId\": \"{{schoolId}}\",\n  \"name\": \"Shelbyville Academy (Updated)\",\n  \"address\": \"789 New Blvd\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/school/updateSchool", "host": ["{{baseUrl}}"], "path": ["school", "updateSchool"] }
+            "url": {
+              "raw": "{{baseUrl}}/school/updateSchool",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "updateSchool"]
+            }
           },
           "event": [
             {
@@ -264,7 +282,11 @@
               "mode": "raw",
               "raw": "{\n  \"schoolId\": \"{{schoolId}}\",\n  \"userId\": \"{{newUserId}}\",\n  \"roleId\": \"{{roleId}}\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/school/addMember", "host": ["{{baseUrl}}"], "path": ["school", "addMember"] }
+            "url": {
+              "raw": "{{baseUrl}}/school/addMember",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "addMember"]
+            }
           },
           "event": [
             {
@@ -291,7 +313,11 @@
               "mode": "raw",
               "raw": "{\n  \"schoolId\": \"{{schoolId}}\",\n  \"userId\": \"{{newUserId}}\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/school/removeMember", "host": ["{{baseUrl}}"], "path": ["school", "removeMember"] }
+            "url": {
+              "raw": "{{baseUrl}}/school/removeMember",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "removeMember"]
+            }
           },
           "event": [
             {
@@ -318,7 +344,11 @@
               "mode": "raw",
               "raw": "{\n  \"schoolId\": \"{{schoolId}}\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/school/deleteSchool", "host": ["{{baseUrl}}"], "path": ["school", "deleteSchool"] }
+            "url": {
+              "raw": "{{baseUrl}}/school/deleteSchool",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "deleteSchool"]
+            }
           },
           "event": [
             {
@@ -350,7 +380,11 @@
               "mode": "raw",
               "raw": "{\n  \"schoolId\": \"{{schoolId}}\",\n  \"name\": \"teacher\",\n  \"permissions\": [\"school:read\", \"school:manage_members\"]\n}"
             },
-            "url": { "raw": "{{baseUrl}}/role/createRole", "host": ["{{baseUrl}}"], "path": ["role", "createRole"] }
+            "url": {
+              "raw": "{{baseUrl}}/role/createRole",
+              "host": ["{{baseUrl}}"],
+              "path": ["role", "createRole"]
+            }
           },
           "event": [
             {
@@ -372,9 +406,7 @@
           "name": "Get Roles for School",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "token", "value": "{{token}}" }
-            ],
+            "header": [{ "key": "token", "value": "{{token}}" }],
             "url": {
               "raw": "{{baseUrl}}/role/getRoles?schoolId={{schoolId}}",
               "host": ["{{baseUrl}}"],
@@ -408,7 +440,11 @@
               "mode": "raw",
               "raw": "{\n  \"roleId\": \"{{roleId}}\",\n  \"name\": \"senior teacher\",\n  \"permissions\": [\"school:read\", \"school:update\", \"school:manage_members\"]\n}"
             },
-            "url": { "raw": "{{baseUrl}}/role/updateRole", "host": ["{{baseUrl}}"], "path": ["role", "updateRole"] }
+            "url": {
+              "raw": "{{baseUrl}}/role/updateRole",
+              "host": ["{{baseUrl}}"],
+              "path": ["role", "updateRole"]
+            }
           },
           "event": [
             {
@@ -435,7 +471,11 @@
               "mode": "raw",
               "raw": "{\n  \"roleId\": \"{{roleId}}\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/role/deleteRole", "host": ["{{baseUrl}}"], "path": ["role", "deleteRole"] }
+            "url": {
+              "raw": "{{baseUrl}}/role/deleteRole",
+              "host": ["{{baseUrl}}"],
+              "path": ["role", "deleteRole"]
+            }
           },
           "event": [
             {
@@ -459,10 +499,12 @@
           "name": "Get All Permissions",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "token", "value": "{{token}}" }
-            ],
-            "url": { "raw": "{{baseUrl}}/permission/getPermissions", "host": ["{{baseUrl}}"], "path": ["permission", "getPermissions"] }
+            "header": [{ "key": "token", "value": "{{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/permission/getPermissions",
+              "host": ["{{baseUrl}}"],
+              "path": ["permission", "getPermissions"]
+            }
           },
           "event": [
             {
@@ -495,7 +537,11 @@
               "mode": "raw",
               "raw": "{\n  \"name\": \"Math 101\",\n  \"schoolId\": \"{{schoolId}}\",\n  \"capacity\": 25\n}"
             },
-            "url": { "raw": "{{baseUrl}}/classroom/createClassroom", "host": ["{{baseUrl}}"], "path": ["classroom", "createClassroom"] }
+            "url": {
+              "raw": "{{baseUrl}}/classroom/createClassroom",
+              "host": ["{{baseUrl}}"],
+              "path": ["classroom", "createClassroom"]
+            }
           },
           "event": [
             {
@@ -526,7 +572,11 @@
               "mode": "raw",
               "raw": "{\n  \"name\": \"Science Lab\",\n  \"schoolId\": \"{{schoolId}}\",\n  \"capacity\": 20,\n  \"resources\": [\"microscopes\", \"lab coats\"]\n}"
             },
-            "url": { "raw": "{{baseUrl}}/classroom/createClassroom", "host": ["{{baseUrl}}"], "path": ["classroom", "createClassroom"] }
+            "url": {
+              "raw": "{{baseUrl}}/classroom/createClassroom",
+              "host": ["{{baseUrl}}"],
+              "path": ["classroom", "createClassroom"]
+            }
           },
           "event": [
             {
@@ -549,9 +599,7 @@
           "name": "Get Classrooms for School",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "token", "value": "{{token}}" }
-            ],
+            "header": [{ "key": "token", "value": "{{token}}" }],
             "url": {
               "raw": "{{baseUrl}}/classroom/getClassrooms?schoolId={{schoolId}}",
               "host": ["{{baseUrl}}"],
@@ -577,9 +625,7 @@
           "name": "Get Classroom by ID",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "token", "value": "{{token}}" }
-            ],
+            "header": [{ "key": "token", "value": "{{token}}" }],
             "url": {
               "raw": "{{baseUrl}}/classroom/getClassroom?classroomId={{classroomId}}",
               "host": ["{{baseUrl}}"],
@@ -613,7 +659,11 @@
               "mode": "raw",
               "raw": "{\n  \"classroomId\": \"{{classroomId}}\",\n  \"name\": \"Advanced Math 201\",\n  \"capacity\": 30\n}"
             },
-            "url": { "raw": "{{baseUrl}}/classroom/updateClassroom", "host": ["{{baseUrl}}"], "path": ["classroom", "updateClassroom"] }
+            "url": {
+              "raw": "{{baseUrl}}/classroom/updateClassroom",
+              "host": ["{{baseUrl}}"],
+              "path": ["classroom", "updateClassroom"]
+            }
           },
           "event": [
             {
@@ -641,7 +691,11 @@
               "mode": "raw",
               "raw": "{\n  \"classroomId\": \"{{classroom2Id}}\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/classroom/deleteClassroom", "host": ["{{baseUrl}}"], "path": ["classroom", "deleteClassroom"] }
+            "url": {
+              "raw": "{{baseUrl}}/classroom/deleteClassroom",
+              "host": ["{{baseUrl}}"],
+              "path": ["classroom", "deleteClassroom"]
+            }
           },
           "event": [
             {
@@ -673,7 +727,11 @@
               "mode": "raw",
               "raw": "{\n  \"name\": \"Alice Johnson\",\n  \"email\": \"alice@students.dev\",\n  \"schoolId\": \"{{schoolId}}\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/student/createStudent", "host": ["{{baseUrl}}"], "path": ["student", "createStudent"] }
+            "url": {
+              "raw": "{{baseUrl}}/student/createStudent",
+              "host": ["{{baseUrl}}"],
+              "path": ["student", "createStudent"]
+            }
           },
           "event": [
             {
@@ -704,7 +762,11 @@
               "mode": "raw",
               "raw": "{\n  \"name\": \"Bob Smith\",\n  \"email\": \"bob@students.dev\",\n  \"schoolId\": \"{{schoolId}}\",\n  \"classroomId\": \"{{classroomId}}\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/student/createStudent", "host": ["{{baseUrl}}"], "path": ["student", "createStudent"] }
+            "url": {
+              "raw": "{{baseUrl}}/student/createStudent",
+              "host": ["{{baseUrl}}"],
+              "path": ["student", "createStudent"]
+            }
           },
           "event": [
             {
@@ -727,9 +789,7 @@
           "name": "Get Students (all in school)",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "token", "value": "{{token}}" }
-            ],
+            "header": [{ "key": "token", "value": "{{token}}" }],
             "url": {
               "raw": "{{baseUrl}}/student/getStudents?schoolId={{schoolId}}",
               "host": ["{{baseUrl}}"],
@@ -755,9 +815,7 @@
           "name": "Get Students (by classroom)",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "token", "value": "{{token}}" }
-            ],
+            "header": [{ "key": "token", "value": "{{token}}" }],
             "url": {
               "raw": "{{baseUrl}}/student/getStudents?schoolId={{schoolId}}&classroomId={{classroomId}}",
               "host": ["{{baseUrl}}"],
@@ -785,9 +843,7 @@
           "name": "Get Student by ID",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "token", "value": "{{token}}" }
-            ],
+            "header": [{ "key": "token", "value": "{{token}}" }],
             "url": {
               "raw": "{{baseUrl}}/student/getStudent?studentId={{studentId}}",
               "host": ["{{baseUrl}}"],
@@ -821,7 +877,11 @@
               "mode": "raw",
               "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"classroomId\": \"{{classroomId}}\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/student/updateStudent", "host": ["{{baseUrl}}"], "path": ["student", "updateStudent"] }
+            "url": {
+              "raw": "{{baseUrl}}/student/updateStudent",
+              "host": ["{{baseUrl}}"],
+              "path": ["student", "updateStudent"]
+            }
           },
           "event": [
             {
@@ -849,7 +909,11 @@
               "mode": "raw",
               "raw": "{\n  \"studentId\": \"{{student2Id}}\",\n  \"newSchoolId\": \"REPLACE_WITH_ANOTHER_SCHOOL_ID\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/student/transferStudent", "host": ["{{baseUrl}}"], "path": ["student", "transferStudent"] }
+            "url": {
+              "raw": "{{baseUrl}}/student/transferStudent",
+              "host": ["{{baseUrl}}"],
+              "path": ["student", "transferStudent"]
+            }
           },
           "event": [
             {
@@ -879,7 +943,11 @@
               "mode": "raw",
               "raw": "{\n  \"studentId\": \"{{student2Id}}\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/student/deleteStudent", "host": ["{{baseUrl}}"], "path": ["student", "deleteStudent"] }
+            "url": {
+              "raw": "{{baseUrl}}/student/deleteStudent",
+              "host": ["{{baseUrl}}"],
+              "path": ["student", "deleteStudent"]
+            }
           },
           "event": [
             {
@@ -904,10 +972,12 @@
           "name": "Teacher: Get Schools (allowed)",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "token", "value": "{{teacherToken}}" }
-            ],
-            "url": { "raw": "{{baseUrl}}/school/getSchools", "host": ["{{baseUrl}}"], "path": ["school", "getSchools"] }
+            "header": [{ "key": "token", "value": "{{teacherToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/school/getSchools",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "getSchools"]
+            }
           },
           "event": [
             {
@@ -934,7 +1004,11 @@
               "mode": "raw",
               "raw": "{\n  \"schoolId\": \"{{schoolId}}\",\n  \"name\": \"Hacked School\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/school/updateSchool", "host": ["{{baseUrl}}"], "path": ["school", "updateSchool"] }
+            "url": {
+              "raw": "{{baseUrl}}/school/updateSchool",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "updateSchool"]
+            }
           },
           "event": [
             {
@@ -962,7 +1036,11 @@
               "mode": "raw",
               "raw": "{\n  \"schoolId\": \"{{schoolId}}\"\n}"
             },
-            "url": { "raw": "{{baseUrl}}/school/deleteSchool", "host": ["{{baseUrl}}"], "path": ["school", "deleteSchool"] }
+            "url": {
+              "raw": "{{baseUrl}}/school/deleteSchool",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "deleteSchool"]
+            }
           },
           "event": [
             {
@@ -983,7 +1061,11 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{baseUrl}}/school/getSchools", "host": ["{{baseUrl}}"], "path": ["school", "getSchools"] }
+            "url": {
+              "raw": "{{baseUrl}}/school/getSchools",
+              "host": ["{{baseUrl}}"],
+              "path": ["school", "getSchools"]
+            }
           },
           "event": [
             {
