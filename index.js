@@ -3,19 +3,20 @@ const Cortex           = require('ion-cortex');
 const ManagersLoader   = require('./loaders/ManagersLoader.js');
 const Aeon             = require('aeon-machine');
 const connectMongo     = require('./connect/mongo');
+const logger           = require('./libs/logger');
 
 process.on('uncaughtException', err => {
-    console.log(`Uncaught Exception:`);
-    console.log(err, err.stack);
+    logger.fatal({ err }, 'Uncaught Exception');
     process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-    console.log('Unhandled rejection at ', promise, `reason:`, reason);
+    logger.fatal({ reason }, 'Unhandled rejection');
     process.exit(1);
 });
 
 (async () => {
+    const mongoose = require('mongoose');
     await connectMongo({ uri: config.dotEnv.MONGO_URI });
 
     const cache = require('./cache/cache.dbh')({
@@ -45,5 +46,23 @@ process.on('unhandledRejection', (reason, promise) => {
 
     await managersLoader.seed();
 
-    managers.userServer.run();
+    const server = managers.userServer.run();
+
+    const shutdown = async (signal) => {
+        logger.info({ signal }, 'Shutdown signal received, closing gracefully');
+        server.close(() => {
+            logger.info('HTTP server closed');
+            mongoose.connection.close(false).then(() => {
+                logger.info('MongoDB connection closed');
+                process.exit(0);
+            });
+        });
+        setTimeout(() => {
+            logger.error('Graceful shutdown timed out, forcing exit');
+            process.exit(1);
+        }, 10000);
+    };
+
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => shutdown('SIGINT'));
 })();

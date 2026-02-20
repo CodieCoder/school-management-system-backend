@@ -9,7 +9,9 @@ A RESTful backend for managing schools, classrooms, and students — built on th
 - **Decoupled authentication** — adapter pattern supporting local JWT (bcrypt) or external providers
 - **Rate limiting** — global and endpoint-specific request throttling
 - **Redis auth caching** — resolved user context cached to reduce MongoDB queries
-- **Cascade operations** — deleting a school removes its classrooms, students, memberships, and roles
+- **Resource management** — track school-wide and classroom-specific resources with status, quantity, and extra data
+- **Capacity enforcement** — classroom enrollment limits enforced on create and update
+- **Cascade operations** — deleting a school removes its classrooms, students, resources, memberships, and roles
 
 ## Tech Stack
 
@@ -21,6 +23,7 @@ A RESTful backend for managing schools, classrooms, and students — built on th
 | Cache      | Redis (ioredis)       |
 | Auth       | JWT + bcrypt          |
 | Validation | qantra-pineapple      |
+| API Docs   | OpenAPI 3.0 (Swagger) |
 | Testing    | Jest + Supertest      |
 
 ## Prerequisites
@@ -61,7 +64,9 @@ NACL_SECRET=<random-secret>
 npm run dev
 ```
 
-The server starts on `http://localhost:5111`. On first boot it seeds:
+The server starts on `http://localhost:5111`. Interactive API docs are available at `http://localhost:5111/api-docs`.
+
+On first boot it seeds:
 
 - Permission registry (all `resource:action` keys)
 - Global `superadmin` role
@@ -73,7 +78,7 @@ The server starts on `http://localhost:5111`. On first boot it seeds:
 npm test
 ```
 
-Tests use a separate `axion_test` database (auto-derived from your `MONGO_URI`). Requires Redis running.
+Runs 118 tests (97 integration + 21 unit) against a separate `axion_test` database (auto-derived from your `MONGO_URI`). Requires Redis running.
 
 ## Project Structure
 
@@ -87,7 +92,8 @@ Tests use a separate `axion_test` database (auto-derived from your `MONGO_URI`).
 │   ├── user/               # User profiles
 │   ├── school/             # School CRUD + member management
 │   ├── classroom/          # Classroom CRUD
-│   ├── student/            # Student CRUD + transfers
+│   ├── student/            # Student CRUD + transfers + capacity check
+│   ├── resource/           # Resource CRUD (school-wide & classroom-specific)
 │   ├── role/               # Role CRUD (dynamic per-school roles)
 │   ├── school_membership/  # User ↔ School ↔ Role junction
 │   ├── permission/         # Permission registry (seeded)
@@ -98,7 +104,8 @@ Tests use a separate `axion_test` database (auto-derived from your `MONGO_URI`).
 ├── cache/                  # Redis client + cache wrapper
 ├── connect/                # MongoDB connection
 ├── config/                 # Environment-based configuration
-├── tests/                  # Integration tests (Jest + Supertest)
+├── tests/                  # Integration + unit tests
+│   └── unit/               #   └── Pure unit tests (no DB)
 ├── docs/                   # API docs, DB schema, Postman collection
 └── static_arch/            # Seed data and system config
 ```
@@ -136,6 +143,11 @@ All endpoints follow the pattern: `POST|GET|PUT|DELETE /api/{module}/{function}`
 | PUT    | `/api/student/updateStudent`     | `student:update`        | Update student fields                |
 | POST   | `/api/student/transferStudent`   | `student:transfer`      | Transfer student between schools     |
 | DELETE | `/api/student/deleteStudent`     | `student:delete`        | Delete a student                     |
+| POST   | `/api/resource/createResource`   | `resource:create`       | Create a resource                    |
+| GET    | `/api/resource/getResource`      | `resource:read`         | Get resource by ID                   |
+| GET    | `/api/resource/getResources`     | `resource:read`         | List resources for a school          |
+| PUT    | `/api/resource/updateResource`   | `resource:update`       | Update resource fields               |
+| DELETE | `/api/resource/deleteResource`   | `resource:delete`       | Delete a resource                    |
 | POST   | `/api/role/createRole`           | `school:manage_roles`   | Create a custom role                 |
 | GET    | `/api/role/getRoles`             | Membership              | List roles for a school              |
 | PUT    | `/api/role/updateRole`           | `school:manage_roles`   | Update a role                        |
@@ -163,20 +175,52 @@ The `__auth` middleware resolves the token into a full user context (profile, me
 
 Responses include standard `RateLimit-*` headers. Exceeding the limit returns `429 Too Many Requests`.
 
-## Docker
+## Deployment
+
+### Production (direct)
 
 ```bash
-docker compose up
+npm ci --omit=dev
+npm start
 ```
 
-Starts the API, MongoDB, and Redis. The API is available at `http://localhost:5111`.
+`npm start` sets `NODE_ENV=production` automatically — Pino outputs structured JSON logs and the server listens on the port defined in `.env`.
 
-See [`Dockerfile`](Dockerfile) and [`docker-compose.yml`](docker-compose.yml).
+For process management, use [PM2](https://pm2.keymetrics.io/):
+
+```bash
+npm install -g pm2
+pm2 start index.js --name school-api --env production
+pm2 save
+pm2 startup   # generates OS startup script
+```
+
+Useful PM2 commands:
+
+```bash
+pm2 logs school-api    # tail logs
+pm2 monit              # live dashboard
+pm2 restart school-api # zero-downtime restart
+pm2 stop school-api
+```
+
+### Environment checklist
+
+Before going live, make sure:
+
+- [ ] `NODE_ENV=production` is set
+- [ ] `MONGO_URI` points to your production MongoDB (Atlas or self-hosted)
+- [ ] `REDIS_URI` points to your production Redis
+- [ ] `LONG_TOKEN_SECRET`, `SHORT_TOKEN_SECRET`, `NACL_SECRET` are strong random values
+- [ ] `SUPER_ADMIN_PASSWORD` is changed from the default
+- [ ] Your server's IP is whitelisted in MongoDB Atlas (if applicable)
+- [ ] A reverse proxy (nginx/Caddy) handles TLS termination in front of the Node process
 
 ## Documentation
 
 | Document                                                                   | Description                          |
 | -------------------------------------------------------------------------- | ------------------------------------ |
+| [Swagger UI](http://localhost:5111/api-docs)                               | Interactive API explorer (live)      |
 | [API Documentation](docs/api-documentation.md)                             | Full endpoint reference              |
 | [Authentication Flow](docs/authentication-flow.md)                         | Auth architecture and RBAC           |
 | [Database Schema](docs/database-schema.md)                                 | Entity definitions and relationships |
