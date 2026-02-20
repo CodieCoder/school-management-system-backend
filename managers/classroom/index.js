@@ -66,7 +66,8 @@ module.exports = class ClassroomManager {
   }
 
   async getClassrooms({ __auth, __query }) {
-    let { schoolId } = __query || {};
+    const query = __query || {};
+    let { schoolId } = query;
     schoolId = this._resolveSchoolId(__auth, schoolId);
     if (!schoolId) return { error: "schoolId is required" };
 
@@ -74,7 +75,10 @@ module.exports = class ClassroomManager {
       return { error: "permission denied" };
     }
 
-    return Classroom.find({ schoolId }).lean();
+    const { parsePagination, paginate } = require("../../libs/paginate");
+    return paginate(Classroom, { schoolId }, parsePagination(query), {
+      sort: { name: 1 },
+    });
   }
 
   async updateClassroom({ __auth, classroomId, name, capacity }) {

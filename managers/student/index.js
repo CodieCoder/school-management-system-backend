@@ -81,7 +81,8 @@ module.exports = class StudentManager {
   }
 
   async getStudents({ __auth, __query }) {
-    let { schoolId, classroomId } = __query || {};
+    const query = __query || {};
+    let { schoolId, classroomId } = query;
     schoolId = this._resolveSchoolId(__auth, schoolId);
     if (!schoolId) return { error: "schoolId is required" };
 
@@ -92,7 +93,11 @@ module.exports = class StudentManager {
     const filter = { schoolId };
     if (classroomId) filter.classroomId = classroomId;
 
-    return Student.find(filter).populate("classroomId", "name").lean();
+    const { parsePagination, paginate } = require("../../libs/paginate");
+    return paginate(Student, filter, parsePagination(query), {
+      populate: { path: "classroomId", select: "name" },
+      sort: { name: 1 },
+    });
   }
 
   async updateStudent({ __auth, studentId, name, email, classroomId }) {

@@ -126,7 +126,10 @@ describe("GET /api/student/getStudents", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.ok).toBe(true);
-    expect(res.body.data.length).toBeGreaterThanOrEqual(2);
+    expect(res.body.data.data.length).toBeGreaterThanOrEqual(2);
+    expect(res.body.data).toHaveProperty("total");
+    expect(res.body.data).toHaveProperty("page");
+    expect(res.body.data).toHaveProperty("pages");
   });
 
   it("should filter students by classroom", async () => {
@@ -137,7 +140,7 @@ describe("GET /api/student/getStudents", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.ok).toBe(true);
-    const all = res.body.data;
+    const all = res.body.data.data;
     all.forEach((s) => {
       expect(s.classroomId).toBeTruthy();
     });

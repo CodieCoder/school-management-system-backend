@@ -61,7 +61,7 @@ describe("Permission enforcement — allowed operations", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.ok).toBe(true);
-    expect(res.body.data.length).toBeGreaterThanOrEqual(1);
+    expect(res.body.data.data.length).toBeGreaterThanOrEqual(1);
   });
 
   it("limited user can list classrooms (read permission)", async () => {

@@ -63,16 +63,19 @@ module.exports = class SchoolManager {
     return school;
   }
 
-  async getSchools({ __auth }) {
-    if (__auth.isSuper) {
-      return School.find({}).lean();
+  async getSchools({ __auth, __query }) {
+    const { parsePagination, paginate } = require("../../libs/paginate");
+    const pg = parsePagination(__query || {});
+
+    let filter = {};
+    if (!__auth.isSuper) {
+      const schoolIds = __auth.memberships
+        .filter((m) => m.schoolId)
+        .map((m) => m.schoolId);
+      filter = { _id: { $in: schoolIds } };
     }
 
-    const schoolIds = __auth.memberships
-      .filter((m) => m.schoolId)
-      .map((m) => m.schoolId);
-
-    return School.find({ _id: { $in: schoolIds } }).lean();
+    return paginate(School, filter, pg, { sort: { createdAt: -1 } });
   }
 
   async getSchoolStats({ __auth, __query }) {

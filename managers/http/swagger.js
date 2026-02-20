@@ -102,6 +102,22 @@ const options = {
           },
         },
       },
+      parameters: {
+        PageParam: {
+          name: "page",
+          in: "query",
+          required: false,
+          schema: { type: "integer", default: 1, minimum: 1 },
+          description: "Page number (1-indexed)",
+        },
+        LimitParam: {
+          name: "limit",
+          in: "query",
+          required: false,
+          schema: { type: "integer", default: 20, minimum: 1, maximum: 100 },
+          description: "Items per page (max 100)",
+        },
+      },
     },
     paths: {
       /* ───── Auth ───── */
@@ -227,11 +243,36 @@ const options = {
       "/school/getSchools": {
         get: {
           tags: ["Schools"],
-          summary: "List schools",
+          summary: "List schools (paginated)",
           description:
             "Returns schools the user is a member of. Superadmins see all.",
           security: [{ TokenAuth: [] }],
-          responses: { 200: { description: "Array of schools" } },
+          parameters: [
+            { $ref: "#/components/parameters/PageParam" },
+            { $ref: "#/components/parameters/LimitParam" },
+          ],
+          responses: {
+            200: {
+              description: "Paginated list of schools",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      data: {
+                        type: "array",
+                        items: { $ref: "#/components/schemas/School" },
+                      },
+                      total: { type: "integer" },
+                      page: { type: "integer" },
+                      limit: { type: "integer" },
+                      pages: { type: "integer" },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       },
       "/school/getSchoolStats": {
@@ -447,7 +488,7 @@ const options = {
       "/classroom/getClassrooms": {
         get: {
           tags: ["Classrooms"],
-          summary: "List classrooms for a school",
+          summary: "List classrooms for a school (paginated)",
           security: [{ TokenAuth: [] }],
           parameters: [
             {
@@ -456,8 +497,31 @@ const options = {
               required: true,
               schema: { type: "string" },
             },
+            { $ref: "#/components/parameters/PageParam" },
+            { $ref: "#/components/parameters/LimitParam" },
           ],
-          responses: { 200: { description: "Array of classrooms" } },
+          responses: {
+            200: {
+              description: "Paginated list of classrooms",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      data: {
+                        type: "array",
+                        items: { $ref: "#/components/schemas/Classroom" },
+                      },
+                      total: { type: "integer" },
+                      page: { type: "integer" },
+                      limit: { type: "integer" },
+                      pages: { type: "integer" },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       },
       "/classroom/updateClassroom": {
@@ -560,7 +624,7 @@ const options = {
       "/student/getStudents": {
         get: {
           tags: ["Students"],
-          summary: "List students for a school",
+          summary: "List students for a school (paginated)",
           security: [{ TokenAuth: [] }],
           parameters: [
             {
@@ -575,8 +639,31 @@ const options = {
               required: false,
               schema: { type: "string" },
             },
+            { $ref: "#/components/parameters/PageParam" },
+            { $ref: "#/components/parameters/LimitParam" },
           ],
-          responses: { 200: { description: "Array of students" } },
+          responses: {
+            200: {
+              description: "Paginated list of students",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      data: {
+                        type: "array",
+                        items: { $ref: "#/components/schemas/Student" },
+                      },
+                      total: { type: "integer" },
+                      page: { type: "integer" },
+                      limit: { type: "integer" },
+                      pages: { type: "integer" },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       },
       "/student/updateStudent": {
@@ -712,7 +799,7 @@ const options = {
       "/resource/getResources": {
         get: {
           tags: ["Resources"],
-          summary: "List resources for a school",
+          summary: "List resources for a school (paginated)",
           description:
             "Filter by classroomId to get classroom-specific resources, or classroomId=null for school-wide only.",
           security: [{ TokenAuth: [] }],
@@ -729,8 +816,31 @@ const options = {
               required: false,
               schema: { type: "string", nullable: true },
             },
+            { $ref: "#/components/parameters/PageParam" },
+            { $ref: "#/components/parameters/LimitParam" },
           ],
-          responses: { 200: { description: "Array of resources" } },
+          responses: {
+            200: {
+              description: "Paginated list of resources",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      data: {
+                        type: "array",
+                        items: { $ref: "#/components/schemas/Resource" },
+                      },
+                      total: { type: "integer" },
+                      page: { type: "integer" },
+                      limit: { type: "integer" },
+                      pages: { type: "integer" },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       },
       "/resource/updateResource": {

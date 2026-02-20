@@ -73,7 +73,8 @@ module.exports = class ResourceManager {
   }
 
   async getResources({ __auth, __query }) {
-    const { schoolId, classroomId } = __query || {};
+    const query = __query || {};
+    const { schoolId, classroomId } = query;
     if (!schoolId) return { error: "schoolId is required" };
 
     if (!this.role.hasPermission(__auth, schoolId, "resource:read")) {
@@ -87,7 +88,11 @@ module.exports = class ResourceManager {
       filter.classroomId = classroomId;
     }
 
-    return Resource.find(filter).populate("classroomId", "name").lean();
+    const { parsePagination, paginate } = require("../../libs/paginate");
+    return paginate(Resource, filter, parsePagination(query), {
+      populate: { path: "classroomId", select: "name" },
+      sort: { createdAt: -1 },
+    });
   }
 
   async updateResource({

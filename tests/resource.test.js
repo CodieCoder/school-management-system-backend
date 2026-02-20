@@ -166,7 +166,10 @@ describe("GET /api/resource/getResources", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.ok).toBe(true);
-    expect(res.body.data.length).toBeGreaterThanOrEqual(3);
+    expect(res.body.data.data.length).toBeGreaterThanOrEqual(3);
+    expect(res.body.data).toHaveProperty("total");
+    expect(res.body.data).toHaveProperty("page");
+    expect(res.body.data).toHaveProperty("pages");
   });
 
   it("should filter resources by classroom", async () => {
@@ -177,7 +180,7 @@ describe("GET /api/resource/getResources", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.ok).toBe(true);
-    res.body.data.forEach((r) => {
+    res.body.data.data.forEach((r) => {
       expect(String(r.classroomId._id || r.classroomId)).toBe(
         String(classroomAId),
       );

@@ -89,8 +89,12 @@ describe("GET /api/school/getSchools", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.ok).toBe(true);
-    expect(res.body.data).toBeInstanceOf(Array);
-    expect(res.body.data.length).toBeGreaterThanOrEqual(1);
+    expect(res.body.data.data).toBeInstanceOf(Array);
+    expect(res.body.data.data.length).toBeGreaterThanOrEqual(1);
+    expect(res.body.data).toHaveProperty("total");
+    expect(res.body.data).toHaveProperty("page");
+    expect(res.body.data).toHaveProperty("limit");
+    expect(res.body.data).toHaveProperty("pages");
   });
 });
 
