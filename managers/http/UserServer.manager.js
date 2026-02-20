@@ -17,6 +17,7 @@ module.exports = class UserServer {
   constructor({ config, managers }) {
     this.config = config;
     this.userApi = managers.userApi;
+    this.healthRouter = managers.health.router;
     this.app = express();
   }
 
@@ -29,7 +30,7 @@ module.exports = class UserServer {
   configure() {
     this.app.use(helmet());
     this.app.use(cors({ origin: "*" }));
-    this.app.use(express.json({ limit: "50kb" }));
+    // this.app.use(express.json({ limit: "50kb" }));
     this.app.use(express.urlencoded({ extended: true, limit: "50kb" }));
     this.app.use(mongoSanitize());
     this.app.use((req, _res, next) => {
@@ -67,6 +68,7 @@ module.exports = class UserServer {
     this.app.use("/api", globalLimiter);
     this.app.use("/api/auth", authLimiter);
     this.app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+    this.app.use(this.healthRouter);
 
     this.app.all("/api/:moduleName/:fnName", this.userApi.mw);
     this.app.use((err, req, res, next) => {

@@ -20,6 +20,7 @@ const ClassroomManager = require("../managers/classroom/index");
 const StudentManager = require("../managers/student/index");
 const ResourceManager = require("../managers/resource/index");
 const AuthCacheInvalidator = require("../libs/authCacheInvalidator");
+const HealthManager = require("../managers/health/index");
 
 module.exports = class ManagersLoader {
   constructor({ config, cortex, cache, oyster, aeon }) {
@@ -64,9 +65,13 @@ module.exports = class ManagersLoader {
     const mwsRepo = middlewaresLoader.load();
     this.injectable.mwsRepo = mwsRepo;
 
-    this.managers.authCacheInvalidator = new AuthCacheInvalidator({ cache: this.cache });
+    this.managers.authCacheInvalidator = new AuthCacheInvalidator({
+      cache: this.cache,
+    });
     this.managers.permission = new PermissionManager();
-    this.managers.schoolMembership = new SchoolMembershipManager(this.injectable);
+    this.managers.schoolMembership = new SchoolMembershipManager(
+      this.injectable,
+    );
     this.managers.user = new UserManager(this.injectable);
     this.managers.role = new RoleManager(this.injectable);
     this.managers.school = new SchoolManager(this.injectable);
@@ -83,6 +88,7 @@ module.exports = class ManagersLoader {
       ...this.injectable,
       prop: "httpExposed",
     });
+    this.managers.health = new HealthManager({ cache: this.cache });
     this.managers.userServer = new UserServer({
       config: this.config,
       managers: this.managers,
