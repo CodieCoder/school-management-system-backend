@@ -24,9 +24,15 @@ const options = {
           type: "object",
           properties: {
             ok: { type: "boolean", example: false },
+            code: {
+              type: "string",
+              example: "NOT_FOUND",
+              description:
+                "Machine-readable error code: VALIDATION_ERROR, INVALID_ID, UNAUTHORIZED, PERMISSION_DENIED, NOT_FOUND, DUPLICATE, CAPACITY_FULL, BAD_REQUEST, INTERNAL_ERROR",
+            },
             data: { type: "object" },
             errors: { type: "array", items: { type: "string" } },
-            message: { type: "string", example: "error description" },
+            message: { type: "string", example: "school not found" },
           },
         },
         School: {
@@ -267,6 +273,8 @@ const options = {
                       page: { type: "integer" },
                       limit: { type: "integer" },
                       pages: { type: "integer" },
+                      hasNextPage: { type: "boolean" },
+                      hasPrevPage: { type: "boolean" },
                     },
                   },
                 },
@@ -406,6 +414,7 @@ const options = {
           },
           responses: {
             200: { description: "Membership created" },
+            403: { description: "Permission denied" },
             409: { description: "Already a member" },
           },
         },
@@ -433,6 +442,7 @@ const options = {
           responses: {
             200: { description: "Member removed" },
             400: { description: "Cannot remove yourself" },
+            403: { description: "Permission denied" },
           },
         },
       },
@@ -462,6 +472,7 @@ const options = {
           responses: {
             200: { description: "Created classroom" },
             400: { description: "Validation error" },
+            403: { description: "Permission denied" },
             409: { description: "Duplicate name in school" },
           },
         },
@@ -516,6 +527,8 @@ const options = {
                       page: { type: "integer" },
                       limit: { type: "integer" },
                       pages: { type: "integer" },
+                      hasNextPage: { type: "boolean" },
+                      hasPrevPage: { type: "boolean" },
                     },
                   },
                 },
@@ -547,6 +560,8 @@ const options = {
           },
           responses: {
             200: { description: "Updated classroom" },
+            403: { description: "Permission denied" },
+            404: { description: "Classroom not found" },
             409: { description: "Duplicate name" },
           },
         },
@@ -569,7 +584,11 @@ const options = {
               },
             },
           },
-          responses: { 200: { description: "Deleted" } },
+          responses: {
+            200: { description: "Deleted" },
+            403: { description: "Permission denied" },
+            404: { description: "Classroom not found" },
+          },
         },
       },
 
@@ -598,7 +617,9 @@ const options = {
           },
           responses: {
             200: { description: "Created student" },
+            403: { description: "Permission denied" },
             409: { description: "Duplicate email" },
+            422: { description: "Classroom at full capacity" },
           },
         },
       },
@@ -658,6 +679,8 @@ const options = {
                       page: { type: "integer" },
                       limit: { type: "integer" },
                       pages: { type: "integer" },
+                      hasNextPage: { type: "boolean" },
+                      hasPrevPage: { type: "boolean" },
                     },
                   },
                 },
@@ -688,7 +711,12 @@ const options = {
               },
             },
           },
-          responses: { 200: { description: "Updated student" } },
+          responses: {
+            200: { description: "Updated student" },
+            403: { description: "Permission denied" },
+            404: { description: "Student not found" },
+            422: { description: "Classroom at full capacity" },
+          },
         },
       },
       "/student/transferStudent": {
@@ -715,7 +743,9 @@ const options = {
           },
           responses: {
             200: { description: "Transferred student" },
-            400: { description: "Same school or not found" },
+            400: { description: "Cannot transfer to same school" },
+            403: { description: "Permission denied" },
+            404: { description: "Student or target school not found" },
           },
         },
       },
@@ -736,7 +766,11 @@ const options = {
               },
             },
           },
-          responses: { 200: { description: "Deleted" } },
+          responses: {
+            200: { description: "Deleted" },
+            403: { description: "Permission denied" },
+            404: { description: "Student not found" },
+          },
         },
       },
 
@@ -774,6 +808,7 @@ const options = {
           responses: {
             200: { description: "Created resource" },
             400: { description: "Validation error" },
+            403: { description: "Permission denied" },
           },
         },
       },
@@ -835,6 +870,8 @@ const options = {
                       page: { type: "integer" },
                       limit: { type: "integer" },
                       pages: { type: "integer" },
+                      hasNextPage: { type: "boolean" },
+                      hasPrevPage: { type: "boolean" },
                     },
                   },
                 },
@@ -868,7 +905,11 @@ const options = {
               },
             },
           },
-          responses: { 200: { description: "Updated resource" } },
+          responses: {
+            200: { description: "Updated resource" },
+            403: { description: "Permission denied" },
+            404: { description: "Resource not found" },
+          },
         },
       },
       "/resource/deleteResource": {
@@ -888,7 +929,11 @@ const options = {
               },
             },
           },
-          responses: { 200: { description: "Deleted" } },
+          responses: {
+            200: { description: "Deleted" },
+            403: { description: "Permission denied" },
+            404: { description: "Resource not found" },
+          },
         },
       },
 
@@ -917,6 +962,7 @@ const options = {
           },
           responses: {
             200: { description: "Created role" },
+            403: { description: "Permission denied" },
             409: { description: "Duplicate name in school" },
           },
         },
@@ -961,6 +1007,8 @@ const options = {
           responses: {
             200: { description: "Updated role" },
             400: { description: "Cannot modify system role" },
+            403: { description: "Permission denied" },
+            404: { description: "Role not found" },
           },
         },
       },
@@ -986,6 +1034,8 @@ const options = {
           responses: {
             200: { description: "Deleted" },
             400: { description: "Cannot delete system role" },
+            403: { description: "Permission denied" },
+            404: { description: "Role not found" },
           },
         },
       },
