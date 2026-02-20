@@ -80,13 +80,17 @@ Note: Registration creates a user with **no memberships**. They must be invited 
 
 ### The `__auth` Middleware
 
-Single middleware for all authenticated endpoints:
+Single middleware for all authenticated endpoints. Uses **Redis caching** to avoid redundant MongoDB queries — the resolved context is cached for 5 minutes per `authId`.
 
 1. Extract `token` from headers
 2. Call `authAdapter.verifyToken({ token })` → `{ authId }`
-3. Load user by `authId`
-4. Load all SchoolMemberships for user (populate roleId)
-5. Inject into request:
+3. Check Redis cache for `auth:{authId}`
+   - **Hit**: use cached context, skip steps 4–5
+   - **Miss**: continue to DB lookup
+4. Load user by `authId`
+5. Load all SchoolMemberships for user (populate roleId)
+6. Write resolved context to Redis (`TTL: 300s`)
+7. Inject into request:
 
 ```javascript
 {

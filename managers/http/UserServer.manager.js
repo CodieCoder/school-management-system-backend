@@ -1,6 +1,9 @@
 const http              = require('http');
 const express           = require('express');
 const cors              = require('cors');
+const rateLimit         = require('express-rate-limit');
+
+const RATE_LIMIT_RESPONSE = { ok: false, message: 'too many requests, please try again later' };
 
 module.exports = class UserServer {
     constructor({config, managers}){
@@ -20,6 +23,26 @@ module.exports = class UserServer {
         this.app.use(express.json());
         this.app.use(express.urlencoded({ extended: true}));
         this.app.use('/static', express.static('public'));
+
+        const globalLimiter = rateLimit({
+            windowMs: 15 * 60 * 1000,
+            max: 100,
+            standardHeaders: true,
+            legacyHeaders: false,
+            message: RATE_LIMIT_RESPONSE,
+        });
+
+        const authLimiter = rateLimit({
+            windowMs: 15 * 60 * 1000,
+            max: 20,
+            standardHeaders: true,
+            legacyHeaders: false,
+            message: RATE_LIMIT_RESPONSE,
+        });
+
+        this.app.use('/api', globalLimiter);
+        this.app.use('/api/auth', authLimiter);
+
         this.app.all('/api/:moduleName/:fnName', this.userApi.mw);
         this.app.use((err, req, res, next) => {
             console.error(err.stack);

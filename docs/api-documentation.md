@@ -1,4 +1,4 @@
-# API Documentation — Phase 1
+# API Documentation
 
 ## Base URL
 
@@ -16,6 +16,26 @@ Pattern: `/{moduleName}/{fnName}`
 |--------|-------|----------|
 | `Content-Type` | `application/json` | POST/PUT |
 | `token` | JWT token | Authenticated endpoints |
+
+---
+
+## Rate Limiting
+
+All `/api` endpoints are subject to a global rate limit of **100 requests per 15-minute window**. Auth endpoints (`/api/auth/*`) have a stricter limit of **20 requests per 15 minutes**.
+
+Responses include standard headers:
+
+| Header | Description |
+|--------|-------------|
+| `RateLimit-Limit` | Maximum requests in the window |
+| `RateLimit-Remaining` | Requests remaining in the current window |
+| `RateLimit-Reset` | Seconds until the window resets |
+
+Exceeding the limit returns `429`:
+
+```json
+{ "ok": false, "message": "too many requests, please try again later" }
+```
 
 ---
 
@@ -293,6 +313,144 @@ List all available permissions from the registry.
 
 ---
 
+## Classrooms
+
+### POST `/classroom/createClassroom`
+
+Create a classroom in a school.
+
+**Auth:** Token with `classroom:create` for this school
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | yes | Classroom name (unique within school) |
+| `schoolId` | string | yes | Target school |
+| `capacity` | number | no | Max students (defaults to 30) |
+
+---
+
+### GET `/classroom/getClassroom`
+
+**Auth:** Token with `classroom:read` for this school
+
+| Field | Type | Source |
+|-------|------|--------|
+| `classroomId` | string | query |
+
+---
+
+### GET `/classroom/getClassrooms`
+
+List classrooms for a school.
+
+**Auth:** Token with `classroom:read` for this school
+
+| Field | Type | Source |
+|-------|------|--------|
+| `schoolId` | string | query |
+
+---
+
+### PUT `/classroom/updateClassroom`
+
+**Auth:** Token with `classroom:update` for this school
+
+| Field | Type | Required |
+|-------|------|----------|
+| `classroomId` | string | yes |
+| `name` | string | no |
+| `capacity` | number | no |
+
+---
+
+### DELETE `/classroom/deleteClassroom`
+
+Removes the classroom and unlinks enrolled students.
+
+**Auth:** Token with `classroom:delete` for this school
+
+| Field | Type | Required |
+|-------|------|----------|
+| `classroomId` | string | yes |
+
+---
+
+## Students
+
+### POST `/student/createStudent`
+
+Enroll a student in a school, optionally assigning them to a classroom.
+
+**Auth:** Token with `student:create` for this school
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | yes | Student name |
+| `email` | string | no | Student email (unique if provided) |
+| `schoolId` | string | yes | Target school |
+| `classroomId` | string | no | Classroom (must belong to same school) |
+
+---
+
+### GET `/student/getStudent`
+
+**Auth:** Token with `student:read` for this school
+
+| Field | Type | Source |
+|-------|------|--------|
+| `studentId` | string | query |
+
+---
+
+### GET `/student/getStudents`
+
+List students for a school, optionally filtered by classroom.
+
+**Auth:** Token with `student:read` for this school
+
+| Field | Type | Source | Required |
+|-------|------|--------|----------|
+| `schoolId` | string | query | yes |
+| `classroomId` | string | query | no |
+
+---
+
+### PUT `/student/updateStudent`
+
+**Auth:** Token with `student:update` for this school
+
+| Field | Type | Required |
+|-------|------|----------|
+| `studentId` | string | yes |
+| `name` | string | no |
+| `email` | string | no |
+| `classroomId` | string | no |
+
+---
+
+### POST `/student/transferStudent`
+
+Transfer a student from one school to another. Removes classroom assignment.
+
+**Auth:** Token with `student:transfer` for the **source** school
+
+| Field | Type | Required |
+|-------|------|----------|
+| `studentId` | string | yes |
+| `toSchoolId` | string | yes |
+
+---
+
+### DELETE `/student/deleteStudent`
+
+**Auth:** Token with `student:delete` for this school
+
+| Field | Type | Required |
+|-------|------|----------|
+| `studentId` | string | yes |
+
+---
+
 ## Endpoint Summary
 
 | Method | Endpoint | Permission |
@@ -307,6 +465,17 @@ List all available permissions from the registry.
 | DELETE | `/school/deleteSchool` | `school:delete` (scoped) |
 | POST | `/school/addMember` | `school:manage_members` (scoped) |
 | DELETE | `/school/removeMember` | `school:manage_members` (scoped) |
+| POST | `/classroom/createClassroom` | `classroom:create` (scoped) |
+| GET | `/classroom/getClassroom` | `classroom:read` (scoped) |
+| GET | `/classroom/getClassrooms` | `classroom:read` (scoped) |
+| PUT | `/classroom/updateClassroom` | `classroom:update` (scoped) |
+| DELETE | `/classroom/deleteClassroom` | `classroom:delete` (scoped) |
+| POST | `/student/createStudent` | `student:create` (scoped) |
+| GET | `/student/getStudent` | `student:read` (scoped) |
+| GET | `/student/getStudents` | `student:read` (scoped) |
+| PUT | `/student/updateStudent` | `student:update` (scoped) |
+| POST | `/student/transferStudent` | `student:transfer` (scoped) |
+| DELETE | `/student/deleteStudent` | `student:delete` (scoped) |
 | POST | `/role/createRole` | `school:manage_roles` (scoped) |
 | GET | `/role/getRoles` | Membership in school |
 | PUT | `/role/updateRole` | `school:manage_roles` (scoped) |
