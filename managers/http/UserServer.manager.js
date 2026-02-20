@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 const swaggerUi = require("swagger-ui-express");
-const swaggerSpec = require("../../docs/swagger");
+const swaggerSpec = require("./swagger");
 
 const RATE_LIMIT_RESPONSE = {
   ok: false,
