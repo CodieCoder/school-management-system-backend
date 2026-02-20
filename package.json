@@ -10,7 +10,7 @@
     "test:ci": "NODE_ENV=test jest --runInBand --forceExit --ci"
   },
   "engines": {
-    "node": ">=18"
+    "node": "20.x"
   },
   "author": "",
   "license": "ISC",
