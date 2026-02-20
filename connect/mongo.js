@@ -1,13 +1,17 @@
 const mongoose = require("mongoose");
+const mongoosePaginate = require("mongoose-paginate-v2");
+const logger = require("../libs/logger");
+
+mongoose.plugin(mongoosePaginate);
 
 module.exports = ({ uri }) => {
   return mongoose
     .connect(uri)
     .then(() => {
-      console.log("MongoDB connected: " + uri);
+      logger.info("MongoDB connected: %s", uri);
     })
     .catch((err) => {
-      console.error("MongoDB connection error:", err);
+      logger.fatal({ err }, "MongoDB connection error");
       process.exit(1);
     });
 };

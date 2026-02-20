@@ -92,7 +92,7 @@ describe("Permission enforcement — denied operations", () => {
       .set("token", limitedToken)
       .send({ schoolId, name: "Hacked Name" });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(403);
     expect(res.body.ok).toBe(false);
     expect(res.body.message).toMatch(/permission denied/i);
   });
@@ -103,7 +103,7 @@ describe("Permission enforcement — denied operations", () => {
       .set("token", limitedToken)
       .send({ schoolId });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(403);
     expect(res.body.ok).toBe(false);
     expect(res.body.message).toMatch(/permission denied/i);
   });
@@ -114,7 +114,7 @@ describe("Permission enforcement — denied operations", () => {
       .set("token", limitedToken)
       .send({ name: "Unauthorized Room", schoolId });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(403);
     expect(res.body.ok).toBe(false);
     expect(res.body.message).toMatch(/permission denied/i);
   });
@@ -125,7 +125,7 @@ describe("Permission enforcement — denied operations", () => {
       .set("token", limitedToken)
       .send({ name: "Unauthorized Student", schoolId });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(403);
     expect(res.body.ok).toBe(false);
     expect(res.body.message).toMatch(/permission denied/i);
   });
@@ -136,7 +136,7 @@ describe("Permission enforcement — denied operations", () => {
       .set("token", limitedToken)
       .send({ schoolId, name: "hacker-role", permissions: ["*:*"] });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(403);
     expect(res.body.ok).toBe(false);
     expect(res.body.message).toMatch(/permission denied/i);
   });
@@ -151,7 +151,7 @@ describe("Permission enforcement — denied operations", () => {
         displayName: "Hacker",
       });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(403);
     expect(res.body.ok).toBe(false);
     expect(res.body.message).toMatch(/permission denied/i);
   });
@@ -188,7 +188,7 @@ describe("Role CRUD", () => {
       .set("token", adminToken)
       .send({ schoolId, name: "editor", permissions: ["school:read"] });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(409);
     expect(res.body.ok).toBe(false);
     expect(res.body.message).toMatch(/already exists/i);
   });

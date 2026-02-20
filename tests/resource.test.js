@@ -143,7 +143,7 @@ describe("GET /api/resource/getResource", () => {
       .query({ resourceId: "000000000000000000000000" })
       .set("token", adminToken);
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(404);
     expect(res.body.ok).toBe(false);
   });
 

@@ -1,4 +1,6 @@
 const Role = require("./role.mongoModel");
+const SchoolMembership = require("../school_membership/school_membership.mongoModel");
+const { appError, ERROR_CODES } = require("../../libs/AppError");
 
 const GLOBAL_SEED = [
   {
@@ -14,6 +16,7 @@ module.exports = class RoleManager {
   constructor({ managers, validators }) {
     this.validators = validators.role;
     this.permission = managers.permission;
+    this.authCacheInvalidator = managers.authCacheInvalidator;
 
     this.httpExposed = [
       "post=createRole",
@@ -80,7 +83,7 @@ module.exports = class RoleManager {
     if (result) return result;
 
     if (!this.hasPermission(__auth, schoolId, "school:manage_roles")) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     for (const key of permissions) {
@@ -91,7 +94,7 @@ module.exports = class RoleManager {
     }
 
     const existing = await Role.findOne({ schoolId, name });
-    if (existing) return { error: "role name already exists in this school" };
+    if (existing) return appError("role name already exists in this school", ERROR_CODES.DUPLICATE);
 
     const role = await Role.create({
       name,
@@ -121,11 +124,11 @@ module.exports = class RoleManager {
     if (result) return result;
 
     const role = await Role.findById(roleId);
-    if (!role) return { error: "role not found" };
+    if (!role) return appError("role not found", ERROR_CODES.NOT_FOUND);
     if (role.isSystem) return { error: "cannot modify system role" };
 
     if (!this.hasPermission(__auth, role.schoolId, "school:manage_roles")) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     if (permissions) {
@@ -140,19 +143,20 @@ module.exports = class RoleManager {
     if (name) role.name = name;
     if (permissions) role.permissions = permissions;
     await role.save();
+    if (permissions) {
+      await this.authCacheInvalidator.invalidateByRoleId(role._id);
+    }
     return role.toObject();
   }
 
   async deleteRole({ __auth, roleId }) {
     const role = await Role.findById(roleId);
-    if (!role) return { error: "role not found" };
+    if (!role) return appError("role not found", ERROR_CODES.NOT_FOUND);
     if (role.isSystem) return { error: "cannot delete system role" };
 
     if (!this.hasPermission(__auth, role.schoolId, "school:manage_roles")) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
-
-    const SchoolMembership = require("../school_membership/school_membership.mongoModel");
 
     const callerMembership = await SchoolMembership.findOne({
       userId: __auth.userId,
@@ -163,8 +167,8 @@ module.exports = class RoleManager {
       return { error: "cannot delete a role you are currently assigned to" };
     }
 
+    await this.authCacheInvalidator.invalidateByRoleId(role._id);
     await SchoolMembership.deleteMany({ roleId: role._id });
-
     await role.deleteOne();
     return { message: "role deleted" };
   }

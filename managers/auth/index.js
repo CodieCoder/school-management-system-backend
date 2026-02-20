@@ -1,4 +1,6 @@
 const LocalAdapter = require("./adapters/local.adapter");
+const logger = require("../../libs/logger");
+const { appError, ERROR_CODES } = require("../../libs/AppError");
 
 module.exports = class AuthManager {
   constructor({ config, managers, validators }) {
@@ -62,7 +64,7 @@ module.exports = class AuthManager {
     if (result) return result;
 
     if (!this.role.hasGlobalPermission(__auth, "user:create")) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     const authResult = await this.adapter.register({ email, password });
@@ -116,6 +118,6 @@ module.exports = class AuthManager {
       });
     }
 
-    console.log(`Superadmin seeded: ${email}`);
+    logger.info("Superadmin seeded: %s", email);
   }
 };

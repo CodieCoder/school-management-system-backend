@@ -8,6 +8,7 @@ const ValidatorsLoader = require("./ValidatorsLoader");
 const ResourceMeshLoader = require("./ResourceMeshLoader");
 const MongoLoader = require("./MongoLoader");
 const utils = require("../libs/utils");
+const logger = require("../libs/logger");
 
 const PermissionManager = require("../managers/permission/index");
 const RoleManager = require("../managers/role/index");
@@ -18,6 +19,7 @@ const AuthManager = require("../managers/auth/index");
 const ClassroomManager = require("../managers/classroom/index");
 const StudentManager = require("../managers/student/index");
 const ResourceManager = require("../managers/resource/index");
+const AuthCacheInvalidator = require("../libs/authCacheInvalidator");
 
 module.exports = class ManagersLoader {
   constructor({ config, cortex, cache, oyster, aeon }) {
@@ -62,8 +64,9 @@ module.exports = class ManagersLoader {
     const mwsRepo = middlewaresLoader.load();
     this.injectable.mwsRepo = mwsRepo;
 
+    this.managers.authCacheInvalidator = new AuthCacheInvalidator({ cache: this.cache });
     this.managers.permission = new PermissionManager();
-    this.managers.schoolMembership = new SchoolMembershipManager();
+    this.managers.schoolMembership = new SchoolMembershipManager(this.injectable);
     this.managers.user = new UserManager(this.injectable);
     this.managers.role = new RoleManager(this.injectable);
     this.managers.school = new SchoolManager(this.injectable);
@@ -92,6 +95,6 @@ module.exports = class ManagersLoader {
     await this.managers.permission.seed();
     await this.managers.role.seed();
     await this.managers.auth.seedSuperAdmin();
-    console.log("Database seeded");
+    logger.info("Database seeded");
   }
 };

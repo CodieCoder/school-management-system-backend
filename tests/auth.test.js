@@ -108,7 +108,7 @@ describe("POST /api/auth/register", () => {
         displayName: "Duplicate",
       });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(409);
     expect(res.body.ok).toBe(false);
     expect(res.body.message).toMatch(/already exists/i);
   });

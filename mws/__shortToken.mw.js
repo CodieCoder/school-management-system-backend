@@ -4,7 +4,7 @@ module.exports = ({ meta, config, managers }) => {
       console.log("token required but not found");
       return managers.responseDispatcher.dispatch(res, {
         ok: false,
-        code: 401,
+        status: 401,
         errors: "unauthorized",
       });
     }
@@ -15,7 +15,7 @@ module.exports = ({ meta, config, managers }) => {
         console.log("failed to decode-1");
         return managers.responseDispatcher.dispatch(res, {
           ok: false,
-          code: 401,
+          status: 401,
           errors: "unauthorized",
         });
       }
@@ -23,7 +23,7 @@ module.exports = ({ meta, config, managers }) => {
       console.log("failed to decode-2");
       return managers.responseDispatcher.dispatch(res, {
         ok: false,
-        code: 401,
+        status: 401,
         errors: "unauthorized",
       });
     }

@@ -6,7 +6,8 @@ module.exports = ({ managers, cache }) => {
     if (!token) {
       return managers.responseDispatcher.dispatch(res, {
         ok: false,
-        code: 401,
+        status: 401,
+        code: "UNAUTHORIZED",
         message: "token required",
       });
     }
@@ -15,7 +16,8 @@ module.exports = ({ managers, cache }) => {
     if (!authResult) {
       return managers.responseDispatcher.dispatch(res, {
         ok: false,
-        code: 401,
+        status: 401,
+        code: "UNAUTHORIZED",
         message: "invalid token",
       });
     }
@@ -35,7 +37,8 @@ module.exports = ({ managers, cache }) => {
     if (!user) {
       return managers.responseDispatcher.dispatch(res, {
         ok: false,
-        code: 401,
+        status: 401,
+        code: "UNAUTHORIZED",
         message: "user not found",
       });
     }

@@ -1,4 +1,6 @@
 const getParamNames = require("./_common/getParamNames");
+const logger = require("../../libs/logger");
+const { AppError, ERROR_CODES } = require("../../libs/AppError");
 /**
  * scans all managers for exposed methods
  * and makes them available through a handler middleware
@@ -106,17 +108,19 @@ module.exports = class ApiHandler {
   async _exec({ targetModule, fnName, cb, data }) {
     let result = {};
 
-    //simple error handling for common errors
     try {
       result = await targetModule[`${fnName}`](data);
     } catch (err) {
       if (err.name === "CastError" || err.name === "BSONError") {
-        result.error = "invalid id format";
+        result = new AppError("invalid id format", ERROR_CODES.INVALID_ID);
       } else if (err.name === "ValidationError") {
-        result.error = err.message;
+        result = new AppError(err.message, ERROR_CODES.VALIDATION);
       } else {
-        console.log(`error`, err);
-        result.error = `${fnName} failed to execute`;
+        logger.error({ err, fnName }, "Manager execution failed");
+        result = new AppError(
+          `${fnName} failed to execute`,
+          ERROR_CODES.INTERNAL,
+        );
       }
     }
 
@@ -178,24 +182,32 @@ module.exports = class ApiHandler {
         if (!result) result = {};
 
         if (result.selfHandleResponse) {
-          // do nothing if response handeled
+          // do nothing if response handled
+        } else if (result instanceof AppError) {
+          return this.managers.responseDispatcher.dispatch(res, {
+            ok: false,
+            code: result.code,
+            message: result.error,
+            status: result.status,
+          });
+        } else if (result.errors) {
+          return this.managers.responseDispatcher.dispatch(res, {
+            ok: false,
+            code: "VALIDATION_ERROR",
+            errors: result.errors,
+          });
+        } else if (result.error) {
+          return this.managers.responseDispatcher.dispatch(res, {
+            ok: false,
+            code: result.code || "BAD_REQUEST",
+            message: result.error,
+            status: result.status,
+          });
         } else {
-          if (result.errors) {
-            return this.managers.responseDispatcher.dispatch(res, {
-              ok: false,
-              errors: result.errors,
-            });
-          } else if (result.error) {
-            return this.managers.responseDispatcher.dispatch(res, {
-              ok: false,
-              message: result.error,
-            });
-          } else {
-            return this.managers.responseDispatcher.dispatch(res, {
-              ok: true,
-              data: result,
-            });
-          }
+          return this.managers.responseDispatcher.dispatch(res, {
+            ok: true,
+            data: result,
+          });
         }
       },
     });

@@ -46,7 +46,7 @@ describe("Classroom capacity enforcement", () => {
       .set("token", adminToken)
       .send({ name: "Cap Student 3", schoolId, classroomId: tinyClassroomId });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(422);
     expect(res.body.ok).toBe(false);
     expect(res.body.message).toMatch(/full capacity/i);
   });
@@ -63,7 +63,7 @@ describe("Classroom capacity enforcement", () => {
       .set("token", adminToken)
       .send({ studentId: unassignedId, classroomId: tinyClassroomId });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(422);
     expect(res.body.ok).toBe(false);
     expect(res.body.message).toMatch(/full capacity/i);
   });

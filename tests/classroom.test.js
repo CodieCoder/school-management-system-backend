@@ -48,7 +48,7 @@ describe("POST /api/classroom/createClassroom", () => {
       .set("token", adminToken)
       .send({ name: "Room 101", schoolId });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(409);
     expect(res.body.ok).toBe(false);
     expect(res.body.message).toMatch(/already exists/i);
   });
@@ -91,7 +91,7 @@ describe("GET /api/classroom/getClassroom", () => {
       .query({ classroomId: "000000000000000000000000" })
       .set("token", adminToken);
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(404);
     expect(res.body.ok).toBe(false);
   });
 });
@@ -135,7 +135,7 @@ describe("PUT /api/classroom/updateClassroom", () => {
       .set("token", adminToken)
       .send({ classroomId, name: "Room 102" });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(409);
     expect(res.body.ok).toBe(false);
     expect(res.body.message).toMatch(/already exists/i);
   });

@@ -2,16 +2,18 @@ module.exports = class ResponseDispatcher {
   constructor() {
     this.key = "responseDispatcher";
   }
-  dispatch(res, { ok, data, code, errors, message, msg }) {
+  dispatch(res, { ok, data, status, code, errors, message, msg }) {
     let statusCode =
-      code ? code
+      status ? status
       : ok == true ? 200
       : 400;
-    return res.status(statusCode).send({
+    const body = {
       ok: ok || false,
       data: data || {},
       errors: errors || [],
       message: msg || message || "",
-    });
+    };
+    if (code) body.code = code;
+    return res.status(statusCode).send(body);
   }
 };

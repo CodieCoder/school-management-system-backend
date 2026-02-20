@@ -1,5 +1,7 @@
 const Resource = require("./resource.mongoModel");
 const Classroom = require("../classroom/classroom.mongoModel");
+const { parsePagination, paginate } = require("../../libs/paginate");
+const { appError, ERROR_CODES } = require("../../libs/AppError");
 
 module.exports = class ResourceManager {
   constructor({ managers, validators }) {
@@ -32,12 +34,12 @@ module.exports = class ResourceManager {
     if (result) return result;
 
     if (!this.role.hasPermission(__auth, schoolId, "resource:create")) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     if (classroomId) {
       const classroom = await Classroom.findById(classroomId);
-      if (!classroom) return { error: "classroom not found" };
+      if (!classroom) return appError("classroom not found", ERROR_CODES.NOT_FOUND);
       if (classroom.schoolId.toString() !== schoolId.toString()) {
         return { error: "classroom does not belong to this school" };
       }
@@ -63,10 +65,10 @@ module.exports = class ResourceManager {
     const resource = await Resource.findById(resourceId)
       .populate("classroomId", "name")
       .lean();
-    if (!resource) return { error: "resource not found" };
+    if (!resource) return appError("resource not found", ERROR_CODES.NOT_FOUND);
 
     if (!this.role.hasPermission(__auth, resource.schoolId, "resource:read")) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     return resource;
@@ -78,7 +80,7 @@ module.exports = class ResourceManager {
     if (!schoolId) return { error: "schoolId is required" };
 
     if (!this.role.hasPermission(__auth, schoolId, "resource:read")) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     const filter = { schoolId };
@@ -88,7 +90,6 @@ module.exports = class ResourceManager {
       filter.classroomId = classroomId;
     }
 
-    const { parsePagination, paginate } = require("../../libs/paginate");
     return paginate(Resource, filter, parsePagination(query), {
       populate: { path: "classroomId", select: "name" },
       sort: { createdAt: -1 },
@@ -108,12 +109,12 @@ module.exports = class ResourceManager {
     if (!resourceId) return { error: "resourceId is required" };
 
     const resource = await Resource.findById(resourceId);
-    if (!resource) return { error: "resource not found" };
+    if (!resource) return appError("resource not found", ERROR_CODES.NOT_FOUND);
 
     if (
       !this.role.hasPermission(__auth, resource.schoolId, "resource:update")
     ) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     if (classroomId !== undefined) {
@@ -121,7 +122,7 @@ module.exports = class ResourceManager {
         resource.classroomId = null;
       } else {
         const classroom = await Classroom.findById(classroomId);
-        if (!classroom) return { error: "classroom not found" };
+        if (!classroom) return appError("classroom not found", ERROR_CODES.NOT_FOUND);
         if (classroom.schoolId.toString() !== resource.schoolId.toString()) {
           return { error: "classroom does not belong to this school" };
         }
@@ -143,12 +144,12 @@ module.exports = class ResourceManager {
     if (!resourceId) return { error: "resourceId is required" };
 
     const resource = await Resource.findById(resourceId);
-    if (!resource) return { error: "resource not found" };
+    if (!resource) return appError("resource not found", ERROR_CODES.NOT_FOUND);
 
     if (
       !this.role.hasPermission(__auth, resource.schoolId, "resource:delete")
     ) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     await resource.deleteOne();

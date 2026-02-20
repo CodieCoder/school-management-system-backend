@@ -175,15 +175,46 @@ The `__auth` middleware resolves the token into a full user context (profile, me
 
 Responses include standard `RateLimit-*` headers. Exceeding the limit returns `429 Too Many Requests`.
 
-## Docker
+## Deployment
+
+### Production (direct)
 
 ```bash
-docker compose up
+npm ci --omit=dev
+npm start
 ```
 
-Starts the API, MongoDB, and Redis. The API is available at `http://localhost:5111`.
+`npm start` sets `NODE_ENV=production` automatically — Pino outputs structured JSON logs and the server listens on the port defined in `.env`.
 
-See [`Dockerfile`](Dockerfile) and [`docker-compose.yml`](docker-compose.yml).
+For process management, use [PM2](https://pm2.keymetrics.io/):
+
+```bash
+npm install -g pm2
+pm2 start index.js --name school-api --env production
+pm2 save
+pm2 startup   # generates OS startup script
+```
+
+Useful PM2 commands:
+
+```bash
+pm2 logs school-api    # tail logs
+pm2 monit              # live dashboard
+pm2 restart school-api # zero-downtime restart
+pm2 stop school-api
+```
+
+### Environment checklist
+
+Before going live, make sure:
+
+- [ ] `NODE_ENV=production` is set
+- [ ] `MONGO_URI` points to your production MongoDB (Atlas or self-hosted)
+- [ ] `REDIS_URI` points to your production Redis
+- [ ] `LONG_TOKEN_SECRET`, `SHORT_TOKEN_SECRET`, `NACL_SECRET` are strong random values
+- [ ] `SUPER_ADMIN_PASSWORD` is changed from the default
+- [ ] Your server's IP is whitelisted in MongoDB Atlas (if applicable)
+- [ ] A reverse proxy (nginx/Caddy) handles TLS termination in front of the Node process
 
 ## Documentation
 

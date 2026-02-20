@@ -5,6 +5,8 @@ const SchoolMembership = require("../school_membership/school_membership.mongoMo
 const Classroom = require("../classroom/classroom.mongoModel");
 const Student = require("../student/student.mongoModel");
 const Resource = require("../resource/resource.mongoModel");
+const { parsePagination, paginate } = require("../../libs/paginate");
+const { appError, ERROR_CODES } = require("../../libs/AppError");
 
 module.exports = class SchoolManager {
   constructor({ managers, validators }) {
@@ -55,16 +57,15 @@ module.exports = class SchoolManager {
       !__auth.isSuper &&
       !this.role.hasPermission(__auth, schoolId, "school:read")
     ) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     const school = await School.findById(schoolId).lean();
-    if (!school) return { error: "school not found" };
+    if (!school) return appError("school not found", ERROR_CODES.NOT_FOUND);
     return school;
   }
 
   async getSchools({ __auth, __query }) {
-    const { parsePagination, paginate } = require("../../libs/paginate");
     const pg = parsePagination(__query || {});
 
     let filter = {};
@@ -89,7 +90,7 @@ module.exports = class SchoolManager {
       !__auth.isSuper &&
       !this.role.hasPermission(__auth, schoolId, "school:read")
     ) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     const oid = new mongoose.Types.ObjectId(schoolId);
@@ -187,7 +188,7 @@ module.exports = class SchoolManager {
         ]),
       ]);
 
-    if (!school) return { error: "school not found" };
+    if (!school) return appError("school not found", ERROR_CODES.NOT_FOUND);
 
     const ss = studentStats[0] || { total: 0, unassigned: 0 };
     const rs = resourceStats[0] || { total: 0, active: 0, schoolWide: 0 };
@@ -212,11 +213,11 @@ module.exports = class SchoolManager {
     if (result) return result;
 
     if (!this.role.hasPermission(__auth, schoolId, "school:update")) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     const school = await School.findById(schoolId);
-    if (!school) return { error: "school not found" };
+    if (!school) return appError("school not found", ERROR_CODES.NOT_FOUND);
 
     if (name !== undefined) school.name = name;
     if (address !== undefined) school.address = address;
@@ -230,11 +231,11 @@ module.exports = class SchoolManager {
     if (!schoolId) return { error: "schoolId is required" };
 
     if (!this.role.hasPermission(__auth, schoolId, "school:delete")) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     const school = await School.findById(schoolId);
-    if (!school) return { error: "school not found" };
+    if (!school) return appError("school not found", ERROR_CODES.NOT_FOUND);
 
     await Promise.all([
       Resource.deleteMany({ schoolId: school._id }),
@@ -254,7 +255,7 @@ module.exports = class SchoolManager {
     }
 
     if (!this.role.hasPermission(__auth, schoolId, "school:manage_members")) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     const targetRole = await Role.findById(roleId);
@@ -282,7 +283,7 @@ module.exports = class SchoolManager {
     }
 
     if (!this.role.hasPermission(__auth, schoolId, "school:manage_members")) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     if (userId.toString() === __auth.userId.toString()) {

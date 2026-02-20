@@ -2,6 +2,8 @@ const mongoose = require("mongoose");
 const Student = require("./student.mongoModel");
 const Classroom = require("../classroom/classroom.mongoModel");
 const School = require("../school/school.mongoModel");
+const { parsePagination, paginate } = require("../../libs/paginate");
+const { appError, ERROR_CODES } = require("../../libs/AppError");
 
 module.exports = class StudentManager {
   constructor({ managers, validators }) {
@@ -35,17 +37,17 @@ module.exports = class StudentManager {
     if (result) return result;
 
     if (!this.role.hasPermission(__auth, schoolId, "student:create")) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     if (email) {
       const dup = await Student.findOne({ email: email.toLowerCase() });
-      if (dup) return { error: "student email already exists" };
+      if (dup) return appError("student email already exists", ERROR_CODES.DUPLICATE);
     }
 
     if (classroomId) {
       const classroom = await Classroom.findById(classroomId);
-      if (!classroom) return { error: "classroom not found" };
+      if (!classroom) return appError("classroom not found", ERROR_CODES.NOT_FOUND);
       if (classroom.schoolId.toString() !== schoolId.toString()) {
         return { error: "classroom does not belong to this school" };
       }
@@ -59,7 +61,7 @@ module.exports = class StudentManager {
         if (enrolled >= classroom.capacity) {
           await session.abortTransaction();
           session.endSession();
-          return { error: "classroom is at full capacity" };
+          return appError("classroom is at full capacity", ERROR_CODES.CAPACITY_FULL);
         }
         const [student] = await Student.create(
           [{ name, email: email || "", schoolId, classroomId }],
@@ -92,10 +94,10 @@ module.exports = class StudentManager {
     const student = await Student.findById(studentId)
       .populate("classroomId", "name")
       .lean();
-    if (!student) return { error: "student not found" };
+    if (!student) return appError("student not found", ERROR_CODES.NOT_FOUND);
 
     if (!this.role.hasPermission(__auth, student.schoolId, "student:read")) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     return student;
@@ -108,13 +110,12 @@ module.exports = class StudentManager {
     if (!schoolId) return { error: "schoolId is required" };
 
     if (!this.role.hasPermission(__auth, schoolId, "student:read")) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     const filter = { schoolId };
     if (classroomId) filter.classroomId = classroomId;
 
-    const { parsePagination, paginate } = require("../../libs/paginate");
     return paginate(Student, filter, parsePagination(query), {
       populate: { path: "classroomId", select: "name" },
       sort: { name: 1 },
@@ -125,10 +126,10 @@ module.exports = class StudentManager {
     if (!studentId) return { error: "studentId is required" };
 
     const student = await Student.findById(studentId);
-    if (!student) return { error: "student not found" };
+    if (!student) return appError("student not found", ERROR_CODES.NOT_FOUND);
 
     if (!this.role.hasPermission(__auth, student.schoolId, "student:update")) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     if (name !== undefined) student.name = name;
@@ -138,7 +139,7 @@ module.exports = class StudentManager {
           email: email.toLowerCase(),
           _id: { $ne: student._id },
         });
-        if (dup) return { error: "student email already exists" };
+        if (dup) return appError("student email already exists", ERROR_CODES.DUPLICATE);
       }
       student.email = email;
     }
@@ -151,7 +152,7 @@ module.exports = class StudentManager {
       }
 
       const classroom = await Classroom.findById(classroomId);
-      if (!classroom) return { error: "classroom not found" };
+      if (!classroom) return appError("classroom not found", ERROR_CODES.NOT_FOUND);
       if (classroom.schoolId.toString() !== student.schoolId.toString()) {
         return { error: "classroom does not belong to this school" };
       }
@@ -166,7 +167,7 @@ module.exports = class StudentManager {
           if (enrolled >= classroom.capacity) {
             await session.abortTransaction();
             session.endSession();
-            return { error: "classroom is at full capacity" };
+            return appError("classroom is at full capacity", ERROR_CODES.CAPACITY_FULL);
           }
           student.classroomId = classroomId;
           await student.save({ session });
@@ -193,18 +194,18 @@ module.exports = class StudentManager {
     }
 
     if (!this.role.hasGlobalPermission(__auth, "student:transfer")) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     const student = await Student.findById(studentId);
-    if (!student) return { error: "student not found" };
+    if (!student) return appError("student not found", ERROR_CODES.NOT_FOUND);
 
     if (student.schoolId.toString() === newSchoolId.toString()) {
       return { error: "cannot transfer to the same school" };
     }
 
     const newSchool = await School.findById(newSchoolId);
-    if (!newSchool) return { error: "target school not found" };
+    if (!newSchool) return appError("target school not found", ERROR_CODES.NOT_FOUND);
 
     if (newClassroomId) {
       const classroom = await Classroom.findById(newClassroomId);
@@ -227,10 +228,10 @@ module.exports = class StudentManager {
     if (!studentId) return { error: "studentId is required" };
 
     const student = await Student.findById(studentId);
-    if (!student) return { error: "student not found" };
+    if (!student) return appError("student not found", ERROR_CODES.NOT_FOUND);
 
     if (!this.role.hasPermission(__auth, student.schoolId, "student:delete")) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     await student.deleteOne();

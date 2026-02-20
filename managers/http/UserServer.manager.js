@@ -6,6 +6,7 @@ const mongoSanitize = require("express-mongo-sanitize");
 const rateLimit = require("express-rate-limit");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./swagger");
+const logger = require("../../libs/logger");
 
 const RATE_LIMIT_RESPONSE = {
   ok: false,
@@ -77,7 +78,7 @@ module.exports = class UserServer {
           .status(413)
           .json({ ok: false, message: "request body too large" });
       }
-      console.error(err.stack);
+      logger.error({ err }, "Unhandled express error");
       res.status(500).json({ ok: false, message: "internal server error" });
     });
     return this.app;
@@ -88,8 +89,10 @@ module.exports = class UserServer {
     this.configure();
     this.server = http.createServer(this.app);
     this.server.listen(this.config.dotEnv.USER_PORT, () => {
-      console.log(
-        `${this.config.dotEnv.SERVICE_NAME.toUpperCase()} is running on port: ${this.config.dotEnv.USER_PORT}`,
+      logger.info(
+        "%s is running on port: %s",
+        this.config.dotEnv.SERVICE_NAME.toUpperCase(),
+        this.config.dotEnv.USER_PORT,
       );
     });
     return this.server;

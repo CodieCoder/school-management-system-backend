@@ -1,6 +1,8 @@
 const Classroom = require("./classroom.mongoModel");
 const Student = require("../student/student.mongoModel");
 const Resource = require("../resource/resource.mongoModel");
+const { parsePagination, paginate } = require("../../libs/paginate");
+const { appError, ERROR_CODES } = require("../../libs/AppError");
 
 module.exports = class ClassroomManager {
   constructor({ managers, validators }) {
@@ -33,12 +35,12 @@ module.exports = class ClassroomManager {
     if (result) return result;
 
     if (!this.role.hasPermission(__auth, schoolId, "classroom:create")) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     const existing = await Classroom.findOne({ schoolId, name });
     if (existing)
-      return { error: "classroom name already exists in this school" };
+      return appError("classroom name already exists in this school", ERROR_CODES.DUPLICATE);
 
     const classroom = await Classroom.create({
       name,
@@ -54,12 +56,12 @@ module.exports = class ClassroomManager {
     if (!classroomId) return { error: "classroomId is required" };
 
     const classroom = await Classroom.findById(classroomId).lean();
-    if (!classroom) return { error: "classroom not found" };
+    if (!classroom) return appError("classroom not found", ERROR_CODES.NOT_FOUND);
 
     if (
       !this.role.hasPermission(__auth, classroom.schoolId, "classroom:read")
     ) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     return classroom;
@@ -72,10 +74,9 @@ module.exports = class ClassroomManager {
     if (!schoolId) return { error: "schoolId is required" };
 
     if (!this.role.hasPermission(__auth, schoolId, "classroom:read")) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
-    const { parsePagination, paginate } = require("../../libs/paginate");
     return paginate(Classroom, { schoolId }, parsePagination(query), {
       sort: { name: 1 },
     });
@@ -85,12 +86,12 @@ module.exports = class ClassroomManager {
     if (!classroomId) return { error: "classroomId is required" };
 
     const classroom = await Classroom.findById(classroomId);
-    if (!classroom) return { error: "classroom not found" };
+    if (!classroom) return appError("classroom not found", ERROR_CODES.NOT_FOUND);
 
     if (
       !this.role.hasPermission(__auth, classroom.schoolId, "classroom:update")
     ) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     if (name !== undefined) {
@@ -99,7 +100,7 @@ module.exports = class ClassroomManager {
         name,
         _id: { $ne: classroom._id },
       });
-      if (dup) return { error: "classroom name already exists in this school" };
+      if (dup) return appError("classroom name already exists in this school", ERROR_CODES.DUPLICATE);
       classroom.name = name;
     }
     if (capacity !== undefined) classroom.capacity = capacity;
@@ -112,12 +113,12 @@ module.exports = class ClassroomManager {
     if (!classroomId) return { error: "classroomId is required" };
 
     const classroom = await Classroom.findById(classroomId);
-    if (!classroom) return { error: "classroom not found" };
+    if (!classroom) return appError("classroom not found", ERROR_CODES.NOT_FOUND);
 
     if (
       !this.role.hasPermission(__auth, classroom.schoolId, "classroom:delete")
     ) {
-      return { error: "permission denied" };
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
     }
 
     await Promise.all([

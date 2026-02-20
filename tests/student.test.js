@@ -67,7 +67,7 @@ describe("POST /api/student/createStudent", () => {
         schoolId: schoolAId,
       });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(409);
     expect(res.body.ok).toBe(false);
     expect(res.body.message).toMatch(/already exists/i);
   });
@@ -112,7 +112,7 @@ describe("GET /api/student/getStudent", () => {
       .query({ studentId: "000000000000000000000000" })
       .set("token", adminToken);
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(404);
     expect(res.body.ok).toBe(false);
   });
 });
@@ -191,7 +191,7 @@ describe("POST /api/student/transferStudent", () => {
       .set("token", adminToken)
       .send({ studentId, newSchoolId: "000000000000000000000000" });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(404);
     expect(res.body.ok).toBe(false);
   });
 });

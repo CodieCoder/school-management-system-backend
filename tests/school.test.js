@@ -67,7 +67,7 @@ describe("GET /api/school/getSchool", () => {
       .query({ schoolId: "000000000000000000000000" })
       .set("token", adminToken);
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(404);
     expect(res.body.ok).toBe(false);
   });
 
@@ -203,7 +203,7 @@ describe("GET /api/school/getSchoolStats", () => {
       .query({ schoolId: "000000000000000000000000" })
       .set("token", adminToken);
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(404);
     expect(res.body.ok).toBe(false);
   });
 });
@@ -231,7 +231,7 @@ describe("PUT /api/school/updateSchool", () => {
       .set("token", adminToken)
       .send({ schoolId: "000000000000000000000000", name: "Ghost" });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(404);
     expect(res.body.ok).toBe(false);
   });
 });
@@ -277,7 +277,7 @@ describe("POST /api/school/addMember & DELETE /api/school/removeMember", () => {
       .set("token", adminToken)
       .send({ schoolId, userId: newUserId, roleId: ownerRole._id });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(409);
     expect(res.body.ok).toBe(false);
     expect(res.body.message).toMatch(/already a member/i);
   });

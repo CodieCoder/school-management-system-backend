@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { nanoid } = require("nanoid");
 const AuthIdentity = require("../auth_identity.mongoModel");
+const { appError, ERROR_CODES } = require("../../../libs/AppError");
 
 const SALT_ROUNDS = 10;
 
@@ -13,7 +14,7 @@ module.exports = class LocalAuthAdapter {
 
   async register({ email, password }) {
     const existing = await AuthIdentity.findOne({ email: email.toLowerCase() });
-    if (existing) return { error: "email already exists" };
+    if (existing) return appError("email already exists", ERROR_CODES.DUPLICATE);
 
     const authId = nanoid();
     const hash = await bcrypt.hash(password, SALT_ROUNDS);
