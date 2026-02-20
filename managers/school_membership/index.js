@@ -23,19 +23,47 @@ module.exports = class SchoolMembershipManager {
   }
 
   async getMemberships({ userId }) {
-    const memberships = await SchoolMembership.find({ userId })
-      .populate("roleId")
-      .populate("schoolId")
-      .lean();
+    const mongoose = require("mongoose");
+    const oid = new mongoose.Types.ObjectId(userId);
 
-    return memberships.map((m) => ({
-      _id: m._id,
-      schoolId: m.schoolId ? m.schoolId._id : null,
-      schoolName: m.schoolId ? m.schoolId.name : null,
-      roleName: m.roleId ? m.roleId.name : null,
-      permissions: m.roleId ? m.roleId.permissions : [],
-      isGlobal: m.schoolId === null,
-    }));
+    const memberships = await SchoolMembership.aggregate([
+      { $match: { userId: oid } },
+      {
+        $lookup: {
+          from: "roles",
+          localField: "roleId",
+          foreignField: "_id",
+          as: "_role",
+        },
+      },
+      {
+        $lookup: {
+          from: "schools",
+          localField: "schoolId",
+          foreignField: "_id",
+          as: "_school",
+        },
+      },
+      {
+        $project: {
+          schoolId: {
+            $ifNull: [{ $arrayElemAt: ["$_school._id", 0] }, null],
+          },
+          schoolName: {
+            $ifNull: [{ $arrayElemAt: ["$_school.name", 0] }, null],
+          },
+          roleName: {
+            $ifNull: [{ $arrayElemAt: ["$_role.name", 0] }, null],
+          },
+          permissions: {
+            $ifNull: [{ $arrayElemAt: ["$_role.permissions", 0] }, []],
+          },
+          isGlobal: { $eq: ["$schoolId", null] },
+        },
+      },
+    ]);
+
+    return memberships;
   }
 
   async getSchoolMembers({ schoolId }) {

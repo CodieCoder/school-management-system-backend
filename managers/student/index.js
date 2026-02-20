@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Student = require("./student.mongoModel");
 const Classroom = require("../classroom/classroom.mongoModel");
 const School = require("../school/school.mongoModel");
@@ -37,28 +38,48 @@ module.exports = class StudentManager {
       return { error: "permission denied" };
     }
 
+    if (email) {
+      const dup = await Student.findOne({ email: email.toLowerCase() });
+      if (dup) return { error: "student email already exists" };
+    }
+
     if (classroomId) {
       const classroom = await Classroom.findById(classroomId);
       if (!classroom) return { error: "classroom not found" };
       if (classroom.schoolId.toString() !== schoolId.toString()) {
         return { error: "classroom does not belong to this school" };
       }
-      const enrolled = await Student.countDocuments({ classroomId });
-      if (enrolled >= classroom.capacity) {
-        return { error: "classroom is at full capacity" };
-      }
-    }
 
-    if (email) {
-      const dup = await Student.findOne({ email: email.toLowerCase() });
-      if (dup) return { error: "student email already exists" };
+      const session = await mongoose.startSession();
+      session.startTransaction();
+      try {
+        const enrolled = await Student.countDocuments({ classroomId }).session(
+          session,
+        );
+        if (enrolled >= classroom.capacity) {
+          await session.abortTransaction();
+          session.endSession();
+          return { error: "classroom is at full capacity" };
+        }
+        const [student] = await Student.create(
+          [{ name, email: email || "", schoolId, classroomId }],
+          { session },
+        );
+        await session.commitTransaction();
+        session.endSession();
+        return student.toObject();
+      } catch (err) {
+        await session.abortTransaction();
+        session.endSession();
+        throw err;
+      }
     }
 
     const student = await Student.create({
       name,
       email: email || "",
       schoolId,
-      classroomId: classroomId || null,
+      classroomId: null,
     });
 
     return student.toObject();
@@ -110,25 +131,6 @@ module.exports = class StudentManager {
       return { error: "permission denied" };
     }
 
-    if (classroomId !== undefined) {
-      if (classroomId === null || classroomId === "") {
-        student.classroomId = null;
-      } else {
-        const classroom = await Classroom.findById(classroomId);
-        if (!classroom) return { error: "classroom not found" };
-        if (classroom.schoolId.toString() !== student.schoolId.toString()) {
-          return { error: "classroom does not belong to this school" };
-        }
-        if (String(student.classroomId) !== String(classroomId)) {
-          const enrolled = await Student.countDocuments({ classroomId });
-          if (enrolled >= classroom.capacity) {
-            return { error: "classroom is at full capacity" };
-          }
-        }
-        student.classroomId = classroomId;
-      }
-    }
-
     if (name !== undefined) student.name = name;
     if (email !== undefined) {
       if (email) {
@@ -140,8 +142,48 @@ module.exports = class StudentManager {
       }
       student.email = email;
     }
-    await student.save();
 
+    if (classroomId !== undefined) {
+      if (classroomId === null || classroomId === "") {
+        student.classroomId = null;
+        await student.save();
+        return student.toObject();
+      }
+
+      const classroom = await Classroom.findById(classroomId);
+      if (!classroom) return { error: "classroom not found" };
+      if (classroom.schoolId.toString() !== student.schoolId.toString()) {
+        return { error: "classroom does not belong to this school" };
+      }
+
+      if (String(student.classroomId) !== String(classroomId)) {
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        try {
+          const enrolled = await Student.countDocuments({
+            classroomId,
+          }).session(session);
+          if (enrolled >= classroom.capacity) {
+            await session.abortTransaction();
+            session.endSession();
+            return { error: "classroom is at full capacity" };
+          }
+          student.classroomId = classroomId;
+          await student.save({ session });
+          await session.commitTransaction();
+          session.endSession();
+          return student.toObject();
+        } catch (err) {
+          await session.abortTransaction();
+          session.endSession();
+          throw err;
+        }
+      }
+
+      student.classroomId = classroomId;
+    }
+
+    await student.save();
     return student.toObject();
   }
 

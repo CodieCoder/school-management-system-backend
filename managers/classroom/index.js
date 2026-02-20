@@ -120,11 +120,13 @@ module.exports = class ClassroomManager {
       return { error: "permission denied" };
     }
 
-    await Student.updateMany(
-      { classroomId: classroom._id },
-      { $set: { classroomId: null } },
-    );
-    await Resource.deleteMany({ classroomId: classroom._id });
+    await Promise.all([
+      Student.updateMany(
+        { classroomId: classroom._id },
+        { $set: { classroomId: null } },
+      ),
+      Resource.deleteMany({ classroomId: classroom._id }),
+    ]);
     await classroom.deleteOne();
 
     return { message: "classroom deleted, students unassigned" };

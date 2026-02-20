@@ -92,121 +92,119 @@ module.exports = class SchoolManager {
       return { error: "permission denied" };
     }
 
-    const pipeline = [
-      { $match: { _id: new mongoose.Types.ObjectId(schoolId) } },
-      {
-        $lookup: {
-          from: "classrooms",
-          localField: "_id",
-          foreignField: "schoolId",
-          as: "classrooms",
-        },
-      },
-      {
-        $lookup: {
-          from: "students",
-          localField: "_id",
-          foreignField: "schoolId",
-          as: "students",
-        },
-      },
-      {
-        $lookup: {
-          from: "resources",
-          localField: "_id",
-          foreignField: "schoolId",
-          as: "resources",
-        },
-      },
-      {
-        $addFields: {
-          totalClassrooms: { $size: "$classrooms" },
-          totalStudents: { $size: "$students" },
-          unassignedStudents: {
-            $size: {
-              $filter: {
-                input: "$students",
-                cond: { $eq: ["$$this.classroomId", null] },
-              },
-            },
-          },
-          totalResources: { $size: "$resources" },
-          activeResources: {
-            $size: {
-              $filter: {
-                input: "$resources",
-                cond: { $eq: ["$$this.isActive", true] },
-              },
-            },
-          },
-          schoolWideResources: {
-            $size: {
-              $filter: {
-                input: "$resources",
-                cond: { $eq: ["$$this.classroomId", null] },
-              },
-            },
-          },
-          classrooms: {
-            $map: {
-              input: "$classrooms",
-              as: "c",
-              in: {
-                _id: "$$c._id",
-                name: "$$c.name",
-                capacity: "$$c.capacity",
-                studentCount: {
-                  $size: {
-                    $filter: {
-                      input: "$students",
-                      cond: { $eq: ["$$this.classroomId", "$$c._id"] },
-                    },
-                  },
-                },
-                resourceCount: {
-                  $size: {
-                    $filter: {
-                      input: "$resources",
-                      cond: { $eq: ["$$this.classroomId", "$$c._id"] },
-                    },
-                  },
-                },
-                utilization: {
-                  $round: [
-                    {
-                      $multiply: [
-                        {
-                          $divide: [
-                            {
-                              $size: {
-                                $filter: {
-                                  input: "$students",
-                                  cond: {
-                                    $eq: ["$$this.classroomId", "$$c._id"],
-                                  },
-                                },
-                              },
-                            },
-                            { $max: ["$$c.capacity", 1] },
-                          ],
-                        },
-                        100,
-                      ],
-                    },
-                    1,
-                  ],
-                },
-              },
-            },
-          },
-        },
-      },
-      { $project: { students: 0, resources: 0 } },
-    ];
+    const oid = new mongoose.Types.ObjectId(schoolId);
 
-    const results = await School.aggregate(pipeline);
-    if (!results.length) return { error: "school not found" };
-    return results[0];
+    const [school, studentStats, resourceStats, classroomBreakdown] =
+      await Promise.all([
+        School.findById(oid).lean(),
+
+        Student.aggregate([
+          { $match: { schoolId: oid } },
+          {
+            $group: {
+              _id: null,
+              total: { $sum: 1 },
+              unassigned: {
+                $sum: { $cond: [{ $eq: ["$classroomId", null] }, 1, 0] },
+              },
+            },
+          },
+        ]),
+
+        Resource.aggregate([
+          { $match: { schoolId: oid } },
+          {
+            $group: {
+              _id: null,
+              total: { $sum: 1 },
+              active: {
+                $sum: { $cond: [{ $eq: ["$isActive", true] }, 1, 0] },
+              },
+              schoolWide: {
+                $sum: { $cond: [{ $eq: ["$classroomId", null] }, 1, 0] },
+              },
+            },
+          },
+        ]),
+
+        Classroom.aggregate([
+          { $match: { schoolId: oid } },
+          {
+            $lookup: {
+              from: "students",
+              let: { cid: "$_id" },
+              pipeline: [
+                { $match: { $expr: { $eq: ["$classroomId", "$$cid"] } } },
+                { $count: "n" },
+              ],
+              as: "_sc",
+            },
+          },
+          {
+            $lookup: {
+              from: "resources",
+              let: { cid: "$_id" },
+              pipeline: [
+                { $match: { $expr: { $eq: ["$classroomId", "$$cid"] } } },
+                { $count: "n" },
+              ],
+              as: "_rc",
+            },
+          },
+          {
+            $project: {
+              name: 1,
+              capacity: 1,
+              studentCount: {
+                $ifNull: [{ $arrayElemAt: ["$_sc.n", 0] }, 0],
+              },
+              resourceCount: {
+                $ifNull: [{ $arrayElemAt: ["$_rc.n", 0] }, 0],
+              },
+            },
+          },
+          {
+            $addFields: {
+              utilization: {
+                $round: [
+                  {
+                    $multiply: [
+                      {
+                        $divide: [
+                          "$studentCount",
+                          { $max: ["$capacity", 1] },
+                        ],
+                      },
+                      100,
+                    ],
+                  },
+                  1,
+                ],
+              },
+            },
+          },
+          { $sort: { name: 1 } },
+        ]),
+      ]);
+
+    if (!school) return { error: "school not found" };
+
+    const ss = studentStats[0] || { total: 0, unassigned: 0 };
+    const rs = resourceStats[0] || { total: 0, active: 0, schoolWide: 0 };
+
+    return {
+      _id: school._id,
+      name: school.name,
+      address: school.address,
+      phone: school.phone,
+      totalClassrooms: classroomBreakdown.length,
+      totalStudents: ss.total,
+      unassignedStudents: ss.unassigned,
+      totalResources: rs.total,
+      activeResources: rs.active,
+      schoolWideResources: rs.schoolWide,
+      classrooms: classroomBreakdown,
+    };
   }
 
   async updateSchool({ __auth, schoolId, name, address, phone }) {
@@ -238,11 +236,13 @@ module.exports = class SchoolManager {
     const school = await School.findById(schoolId);
     if (!school) return { error: "school not found" };
 
-    await Resource.deleteMany({ schoolId: school._id });
-    await Student.deleteMany({ schoolId: school._id });
-    await Classroom.deleteMany({ schoolId: school._id });
-    await SchoolMembership.deleteMany({ schoolId: school._id });
-    await Role.deleteMany({ schoolId: school._id });
+    await Promise.all([
+      Resource.deleteMany({ schoolId: school._id }),
+      Student.deleteMany({ schoolId: school._id }),
+      Classroom.deleteMany({ schoolId: school._id }),
+      SchoolMembership.deleteMany({ schoolId: school._id }),
+      Role.deleteMany({ schoolId: school._id }),
+    ]);
     await school.deleteOne();
 
     return { message: "school and associated resources deleted" };
