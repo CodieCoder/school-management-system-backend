@@ -78,6 +78,9 @@ module.exports = class SchoolManager {
   async getSchoolStats({ __auth, __query }) {
     const { schoolId } = __query || {};
     if (!schoolId) return { error: "schoolId is required" };
+    if (!mongoose.Types.ObjectId.isValid(schoolId)) {
+      return { error: "Invalid schoolId" };
+    }
 
     if (
       !__auth.isSuper &&

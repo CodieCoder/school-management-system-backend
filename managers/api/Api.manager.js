@@ -106,11 +106,18 @@ module.exports = class ApiHandler {
   async _exec({ targetModule, fnName, cb, data }) {
     let result = {};
 
+    //simple error handling for common errors
     try {
       result = await targetModule[`${fnName}`](data);
     } catch (err) {
-      console.log(`error`, err);
-      result.error = `${fnName} failed to execute`;
+      if (err.name === "CastError" || err.name === "BSONError") {
+        result.error = "invalid id format";
+      } else if (err.name === "ValidationError") {
+        result.error = err.message;
+      } else {
+        console.log(`error`, err);
+        result.error = `${fnName} failed to execute`;
+      }
     }
 
     if (cb) cb(result);
