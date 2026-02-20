@@ -1,5 +1,6 @@
 const Classroom = require("./classroom.mongoModel");
 const Student = require("../student/student.mongoModel");
+const Resource = require("../resource/resource.mongoModel");
 
 module.exports = class ClassroomManager {
   constructor({ managers, validators }) {
@@ -23,7 +24,7 @@ module.exports = class ClassroomManager {
     return null;
   }
 
-  async createClassroom({ __auth, name, schoolId, capacity, resources }) {
+  async createClassroom({ __auth, name, schoolId, capacity }) {
     if (!name || name.trim().length < 1) return { error: "name is required" };
     schoolId = this._resolveSchoolId(__auth, schoolId);
     if (!schoolId) return { error: "schoolId is required" };
@@ -43,7 +44,6 @@ module.exports = class ClassroomManager {
       name,
       schoolId,
       capacity: capacity || 30,
-      resources: resources || [],
     });
 
     return classroom.toObject();
@@ -77,7 +77,7 @@ module.exports = class ClassroomManager {
     return Classroom.find({ schoolId }).lean();
   }
 
-  async updateClassroom({ __auth, classroomId, name, capacity, resources }) {
+  async updateClassroom({ __auth, classroomId, name, capacity }) {
     if (!classroomId) return { error: "classroomId is required" };
 
     const classroom = await Classroom.findById(classroomId);
@@ -99,7 +99,6 @@ module.exports = class ClassroomManager {
       classroom.name = name;
     }
     if (capacity !== undefined) classroom.capacity = capacity;
-    if (resources !== undefined) classroom.resources = resources;
     await classroom.save();
 
     return classroom.toObject();
@@ -121,6 +120,7 @@ module.exports = class ClassroomManager {
       { classroomId: classroom._id },
       { $set: { classroomId: null } },
     );
+    await Resource.deleteMany({ classroomId: classroom._id });
     await classroom.deleteOne();
 
     return { message: "classroom deleted, students unassigned" };

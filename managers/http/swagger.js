@@ -75,6 +75,21 @@ const options = {
             isSystem: { type: "boolean" },
           },
         },
+        Resource: {
+          type: "object",
+          properties: {
+            _id: { type: "string" },
+            name: { type: "string" },
+            schoolId: { type: "string" },
+            classroomId: { type: "string", nullable: true },
+            isActive: { type: "boolean" },
+            quantity: { type: "integer" },
+            description: { type: "string" },
+            extraData: { type: "object" },
+            createdAt: { type: "string", format: "date-time" },
+            updatedAt: { type: "string", format: "date-time" },
+          },
+        },
         Permission: {
           type: "object",
           properties: {
@@ -634,6 +649,135 @@ const options = {
         },
       },
 
+      /* ───── Resources ───── */
+      "/resource/createResource": {
+        post: {
+          tags: ["Resources"],
+          summary: "Create a resource",
+          description:
+            "Create a school-wide resource (no classroomId) or a classroom-specific resource.",
+          security: [{ TokenAuth: [] }],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["name", "schoolId"],
+                  properties: {
+                    name: { type: "string" },
+                    schoolId: { type: "string" },
+                    classroomId: {
+                      type: "string",
+                      nullable: true,
+                      description: "null = school-wide",
+                    },
+                    quantity: { type: "integer", default: 1 },
+                    description: { type: "string" },
+                    extraData: { type: "object" },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            200: { description: "Created resource" },
+            400: { description: "Validation error" },
+          },
+        },
+      },
+      "/resource/getResource": {
+        get: {
+          tags: ["Resources"],
+          summary: "Get a resource by ID",
+          security: [{ TokenAuth: [] }],
+          parameters: [
+            {
+              name: "resourceId",
+              in: "query",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          responses: {
+            200: { description: "Resource object" },
+            404: { description: "Not found" },
+          },
+        },
+      },
+      "/resource/getResources": {
+        get: {
+          tags: ["Resources"],
+          summary: "List resources for a school",
+          description:
+            "Filter by classroomId to get classroom-specific resources, or classroomId=null for school-wide only.",
+          security: [{ TokenAuth: [] }],
+          parameters: [
+            {
+              name: "schoolId",
+              in: "query",
+              required: true,
+              schema: { type: "string" },
+            },
+            {
+              name: "classroomId",
+              in: "query",
+              required: false,
+              schema: { type: "string", nullable: true },
+            },
+          ],
+          responses: { 200: { description: "Array of resources" } },
+        },
+      },
+      "/resource/updateResource": {
+        put: {
+          tags: ["Resources"],
+          summary: "Update a resource",
+          security: [{ TokenAuth: [] }],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["resourceId"],
+                  properties: {
+                    resourceId: { type: "string" },
+                    name: { type: "string" },
+                    classroomId: { type: "string", nullable: true },
+                    isActive: { type: "boolean" },
+                    quantity: { type: "integer" },
+                    description: { type: "string" },
+                    extraData: { type: "object" },
+                  },
+                },
+              },
+            },
+          },
+          responses: { 200: { description: "Updated resource" } },
+        },
+      },
+      "/resource/deleteResource": {
+        delete: {
+          tags: ["Resources"],
+          summary: "Delete a resource",
+          security: [{ TokenAuth: [] }],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["resourceId"],
+                  properties: { resourceId: { type: "string" } },
+                },
+              },
+            },
+          },
+          responses: { 200: { description: "Deleted" } },
+        },
+      },
+
       /* ───── Roles ───── */
       "/role/createRole": {
         post: {
@@ -748,6 +892,7 @@ const options = {
       { name: "Schools", description: "School management" },
       { name: "Classrooms", description: "Classroom management" },
       { name: "Students", description: "Student management" },
+      { name: "Resources", description: "Resource management" },
       { name: "Roles", description: "Dynamic role management" },
       { name: "Permissions", description: "Permission registry" },
     ],

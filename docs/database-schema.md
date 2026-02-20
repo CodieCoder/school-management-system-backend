@@ -4,7 +4,7 @@
 
 The School Management System uses **MongoDB** with **Mongoose**. Authentication is decoupled via an adapter pattern. Role assignment is **per-school** through a junction entity, enabling users to own multiple schools and hold different roles at each.
 
-**Entities:** Permission, Role, User, School, SchoolMembership, Classroom, Student
+**Entities:** Permission, Role, User, School, SchoolMembership, Classroom, Student, Resource
 
 ---
 
@@ -178,7 +178,7 @@ Junction table linking users to schools with a role. One membership per user per
 ## Data Integrity Rules
 
 - Creating a **school** auto-creates an `owner` role for that school and a membership for the creator
-- Deleting a **school** cascades: remove its roles, memberships, and future Phase 2 entities
+- Deleting a **school** cascades: remove its resources, students, classrooms, roles, and memberships
 - A **school-scoped role** can only be assigned to memberships within the same school
 - A **system role** (`isSystem: true`) cannot be deleted or renamed
 - The `owner` role is auto-created per school and grants `*:*` within that school
@@ -223,18 +223,46 @@ Junction table linking users to schools with a role. One membership per user per
 
 ---
 
+---
+
+### 8. Resources
+
+Resources belong to a school and can optionally be tied to a specific classroom. When `classroomId` is null, the resource is school-wide.
+
+| Field         | Type     | Required | Description                                    |
+| ------------- | -------- | -------- | ---------------------------------------------- |
+| `_id`         | ObjectId | auto     | Primary key                                    |
+| `name`        | String   | yes      | Resource name                                  |
+| `schoolId`    | ObjectId | yes      | Reference to Schools                           |
+| `classroomId` | ObjectId | no       | Reference to Classrooms (null = school-wide)   |
+| `isActive`    | Boolean  | no       | Whether the resource is active (default: true) |
+| `quantity`    | Number   | no       | Resource quantity (default: 1)                 |
+| `description` | String   | no       | Description text                               |
+| `extraData`   | Mixed    | no       | Flexible JSON for additional attributes        |
+| `createdAt`   | Date     | auto     | Mongoose timestamp                             |
+| `updatedAt`   | Date     | auto     | Mongoose timestamp                             |
+
+**Indexes:** `schoolId`, `classroomId`
+
+---
+
 ### Additional Relationships
 
-| Relationship        | Type        | Via                      |
-| ------------------- | ----------- | ------------------------ |
-| Classroom → School  | Many-to-One | `schoolId`               |
-| Student → School    | Many-to-One | `schoolId`               |
-| Student → Classroom | Many-to-One | `classroomId` (nullable) |
+| Relationship         | Type        | Via                      |
+| -------------------- | ----------- | ------------------------ |
+| Classroom → School   | Many-to-One | `schoolId`               |
+| Student → School     | Many-to-One | `schoolId`               |
+| Student → Classroom  | Many-to-One | `classroomId` (nullable) |
+| Resource → School    | Many-to-One | `schoolId`               |
+| Resource → Classroom | Many-to-One | `classroomId` (nullable) |
 
 ### Additional Data Integrity Rules
 
 - A **classroom** name must be unique within a school
-- Deleting a **classroom** unlinks its students (`classroomId` set to null)
-- Deleting a **school** cascades to its classrooms and students
+- Deleting a **classroom** unlinks its students (`classroomId` set to null) and deletes its resources
+- Deleting a **school** cascades to its resources, classrooms, and students
 - A **student** assigned to a classroom must belong to the same school
+- A **student** cannot be enrolled in a classroom that is at full capacity
 - Transferring a **student** to another school clears their classroom assignment
+- A **resource** assigned to a classroom must belong to the same school
+- A **resource** with `classroomId: null` is school-wide; with a value it is classroom-specific

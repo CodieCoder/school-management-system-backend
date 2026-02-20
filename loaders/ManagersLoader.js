@@ -17,6 +17,7 @@ const SchoolMembershipManager = require("../managers/school_membership/index");
 const AuthManager = require("../managers/auth/index");
 const ClassroomManager = require("../managers/classroom/index");
 const StudentManager = require("../managers/student/index");
+const ResourceManager = require("../managers/resource/index");
 
 module.exports = class ManagersLoader {
   constructor({ config, cortex, cache, oyster, aeon }) {
@@ -69,6 +70,7 @@ module.exports = class ManagersLoader {
     this.managers.auth = new AuthManager(this.injectable);
     this.managers.classroom = new ClassroomManager(this.injectable);
     this.managers.student = new StudentManager(this.injectable);
+    this.managers.resource = new ResourceManager(this.injectable);
 
     this.managers.mwsExec = new VirtualStack({
       ...{ preStack: ["__device"] },

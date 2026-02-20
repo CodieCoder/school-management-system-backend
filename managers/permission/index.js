@@ -134,6 +134,34 @@ const SEED = [
     description: "Transfer students between schools",
     category: "Students",
   },
+  {
+    key: "resource:create",
+    resource: "resource",
+    action: "create",
+    description: "Create resources",
+    category: "Resources",
+  },
+  {
+    key: "resource:read",
+    resource: "resource",
+    action: "read",
+    description: "View resources",
+    category: "Resources",
+  },
+  {
+    key: "resource:update",
+    resource: "resource",
+    action: "update",
+    description: "Update resources",
+    category: "Resources",
+  },
+  {
+    key: "resource:delete",
+    resource: "resource",
+    action: "delete",
+    description: "Delete resources",
+    category: "Resources",
+  },
 ];
 
 module.exports = class PermissionManager {

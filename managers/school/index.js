@@ -4,6 +4,7 @@ const Role = require("../role/role.mongoModel");
 const SchoolMembership = require("../school_membership/school_membership.mongoModel");
 const Classroom = require("../classroom/classroom.mongoModel");
 const Student = require("../student/student.mongoModel");
+const Resource = require("../resource/resource.mongoModel");
 
 module.exports = class SchoolManager {
   constructor({ managers, validators }) {
@@ -78,7 +79,10 @@ module.exports = class SchoolManager {
     const { schoolId } = __query || {};
     if (!schoolId) return { error: "schoolId is required" };
 
-    if (!__auth.isSuper && !this.role.hasPermission(__auth, schoolId, "school:read")) {
+    if (
+      !__auth.isSuper &&
+      !this.role.hasPermission(__auth, schoolId, "school:read")
+    ) {
       return { error: "permission denied" };
     }
 
@@ -138,7 +142,9 @@ module.exports = class SchoolManager {
                               $size: {
                                 $filter: {
                                   input: "$students",
-                                  cond: { $eq: ["$$this.classroomId", "$$c._id"] },
+                                  cond: {
+                                    $eq: ["$$this.classroomId", "$$c._id"],
+                                  },
                                 },
                               },
                             },
@@ -193,6 +199,7 @@ module.exports = class SchoolManager {
     const school = await School.findById(schoolId);
     if (!school) return { error: "school not found" };
 
+    await Resource.deleteMany({ schoolId: school._id });
     await Student.deleteMany({ schoolId: school._id });
     await Classroom.deleteMany({ schoolId: school._id });
     await SchoolMembership.deleteMany({ schoolId: school._id });

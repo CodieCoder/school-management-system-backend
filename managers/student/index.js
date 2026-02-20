@@ -43,6 +43,10 @@ module.exports = class StudentManager {
       if (classroom.schoolId.toString() !== schoolId.toString()) {
         return { error: "classroom does not belong to this school" };
       }
+      const enrolled = await Student.countDocuments({ classroomId });
+      if (enrolled >= classroom.capacity) {
+        return { error: "classroom is at full capacity" };
+      }
     }
 
     if (email) {
@@ -109,6 +113,12 @@ module.exports = class StudentManager {
         if (!classroom) return { error: "classroom not found" };
         if (classroom.schoolId.toString() !== student.schoolId.toString()) {
           return { error: "classroom does not belong to this school" };
+        }
+        if (String(student.classroomId) !== String(classroomId)) {
+          const enrolled = await Student.countDocuments({ classroomId });
+          if (enrolled >= classroom.capacity) {
+            return { error: "classroom is at full capacity" };
+          }
         }
         student.classroomId = classroomId;
       }

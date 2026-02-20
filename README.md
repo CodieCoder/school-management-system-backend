@@ -9,7 +9,9 @@ A RESTful backend for managing schools, classrooms, and students — built on th
 - **Decoupled authentication** — adapter pattern supporting local JWT (bcrypt) or external providers
 - **Rate limiting** — global and endpoint-specific request throttling
 - **Redis auth caching** — resolved user context cached to reduce MongoDB queries
-- **Cascade operations** — deleting a school removes its classrooms, students, memberships, and roles
+- **Resource management** — track school-wide and classroom-specific resources with status, quantity, and extra data
+- **Capacity enforcement** — classroom enrollment limits enforced on create and update
+- **Cascade operations** — deleting a school removes its classrooms, students, resources, memberships, and roles
 
 ## Tech Stack
 
@@ -76,7 +78,7 @@ On first boot it seeds:
 npm test
 ```
 
-Runs 94 tests (70 integration + 24 unit) against a separate `axion_test` database (auto-derived from your `MONGO_URI`). Requires Redis running.
+Runs 118 tests (97 integration + 21 unit) against a separate `axion_test` database (auto-derived from your `MONGO_URI`). Requires Redis running.
 
 ## Project Structure
 
@@ -90,7 +92,8 @@ Runs 94 tests (70 integration + 24 unit) against a separate `axion_test` databas
 │   ├── user/               # User profiles
 │   ├── school/             # School CRUD + member management
 │   ├── classroom/          # Classroom CRUD
-│   ├── student/            # Student CRUD + transfers
+│   ├── student/            # Student CRUD + transfers + capacity check
+│   ├── resource/           # Resource CRUD (school-wide & classroom-specific)
 │   ├── role/               # Role CRUD (dynamic per-school roles)
 │   ├── school_membership/  # User ↔ School ↔ Role junction
 │   ├── permission/         # Permission registry (seeded)
@@ -140,6 +143,11 @@ All endpoints follow the pattern: `POST|GET|PUT|DELETE /api/{module}/{function}`
 | PUT    | `/api/student/updateStudent`     | `student:update`        | Update student fields                |
 | POST   | `/api/student/transferStudent`   | `student:transfer`      | Transfer student between schools     |
 | DELETE | `/api/student/deleteStudent`     | `student:delete`        | Delete a student                     |
+| POST   | `/api/resource/createResource`   | `resource:create`       | Create a resource                    |
+| GET    | `/api/resource/getResource`      | `resource:read`         | Get resource by ID                   |
+| GET    | `/api/resource/getResources`     | `resource:read`         | List resources for a school          |
+| PUT    | `/api/resource/updateResource`   | `resource:update`       | Update resource fields               |
+| DELETE | `/api/resource/deleteResource`   | `resource:delete`       | Delete a resource                    |
 | POST   | `/api/role/createRole`           | `school:manage_roles`   | Create a custom role                 |
 | GET    | `/api/role/getRoles`             | Membership              | List roles for a school              |
 | PUT    | `/api/role/updateRole`           | `school:manage_roles`   | Update a role                        |

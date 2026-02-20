@@ -118,13 +118,11 @@ describe("PUT /api/classroom/updateClassroom", () => {
       .send({
         classroomId,
         capacity: 40,
-        resources: ["projector", "whiteboard"],
       });
 
     expect(res.status).toBe(200);
     expect(res.body.ok).toBe(true);
     expect(res.body.data.capacity).toBe(40);
-    expect(res.body.data.resources).toEqual(["projector", "whiteboard"]);
   });
 
   it("should reject rename to a duplicate name", async () => {

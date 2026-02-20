@@ -9,7 +9,6 @@ const ClassroomSchema = new mongoose.Schema(
       required: true,
     },
     capacity: { type: Number, default: 30 },
-    resources: [{ type: String }],
   },
   { timestamps: true },
 );
