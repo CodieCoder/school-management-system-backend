@@ -2,6 +2,8 @@ const http              = require('http');
 const express           = require('express');
 const cors              = require('cors');
 const rateLimit         = require('express-rate-limit');
+const swaggerUi         = require('swagger-ui-express');
+const swaggerSpec       = require('../../docs/swagger');
 
 const RATE_LIMIT_RESPONSE = { ok: false, message: 'too many requests, please try again later' };
 
@@ -42,6 +44,7 @@ module.exports = class UserServer {
 
         this.app.use('/api', globalLimiter);
         this.app.use('/api/auth', authLimiter);
+        this.app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
         this.app.all('/api/:moduleName/:fnName', this.userApi.mw);
         this.app.use((err, req, res, next) => {

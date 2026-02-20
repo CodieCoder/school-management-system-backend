@@ -21,6 +21,7 @@ A RESTful backend for managing schools, classrooms, and students — built on th
 | Cache      | Redis (ioredis)       |
 | Auth       | JWT + bcrypt          |
 | Validation | qantra-pineapple      |
+| API Docs   | OpenAPI 3.0 (Swagger) |
 | Testing    | Jest + Supertest      |
 
 ## Prerequisites
@@ -61,7 +62,9 @@ NACL_SECRET=<random-secret>
 npm run dev
 ```
 
-The server starts on `http://localhost:5111`. On first boot it seeds:
+The server starts on `http://localhost:5111`. Interactive API docs are available at `http://localhost:5111/api-docs`.
+
+On first boot it seeds:
 
 - Permission registry (all `resource:action` keys)
 - Global `superadmin` role
@@ -73,7 +76,7 @@ The server starts on `http://localhost:5111`. On first boot it seeds:
 npm test
 ```
 
-Tests use a separate `axion_test` database (auto-derived from your `MONGO_URI`). Requires Redis running.
+Runs 94 tests (70 integration + 24 unit) against a separate `axion_test` database (auto-derived from your `MONGO_URI`). Requires Redis running.
 
 ## Project Structure
 
@@ -98,7 +101,8 @@ Tests use a separate `axion_test` database (auto-derived from your `MONGO_URI`).
 ├── cache/                  # Redis client + cache wrapper
 ├── connect/                # MongoDB connection
 ├── config/                 # Environment-based configuration
-├── tests/                  # Integration tests (Jest + Supertest)
+├── tests/                  # Integration + unit tests
+│   └── unit/               #   └── Pure unit tests (no DB)
 ├── docs/                   # API docs, DB schema, Postman collection
 └── static_arch/            # Seed data and system config
 ```
@@ -177,6 +181,7 @@ See [`Dockerfile`](Dockerfile) and [`docker-compose.yml`](docker-compose.yml).
 
 | Document                                                                   | Description                          |
 | -------------------------------------------------------------------------- | ------------------------------------ |
+| [Swagger UI](http://localhost:5111/api-docs)                               | Interactive API explorer (live)      |
 | [API Documentation](docs/api-documentation.md)                             | Full endpoint reference              |
 | [Authentication Flow](docs/authentication-flow.md)                         | Auth architecture and RBAC           |
 | [Database Schema](docs/database-schema.md)                                 | Entity definitions and relationships |
