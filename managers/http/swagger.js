@@ -219,6 +219,56 @@ const options = {
           responses: { 200: { description: "Array of schools" } },
         },
       },
+      "/school/getSchoolStats": {
+        get: {
+          tags: ["Schools"],
+          summary: "Get school dashboard stats",
+          description:
+            "Returns school overview with classroom breakdown, student counts, and capacity utilization via a MongoDB aggregation pipeline.",
+          security: [{ TokenAuth: [] }],
+          parameters: [
+            {
+              name: "schoolId",
+              in: "query",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          responses: {
+            200: {
+              description: "School stats with per-classroom breakdown",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      name: { type: "string" },
+                      totalClassrooms: { type: "integer" },
+                      totalStudents: { type: "integer" },
+                      unassignedStudents: { type: "integer" },
+                      classrooms: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            _id: { type: "string" },
+                            name: { type: "string" },
+                            capacity: { type: "integer" },
+                            studentCount: { type: "integer" },
+                            utilization: { type: "number", example: 83.3 },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            403: { description: "Permission denied" },
+            404: { description: "Not found" },
+          },
+        },
+      },
       "/school/updateSchool": {
         put: {
           tags: ["Schools"],

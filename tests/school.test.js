@@ -94,6 +94,87 @@ describe("GET /api/school/getSchools", () => {
   });
 });
 
+describe("GET /api/school/getSchoolStats", () => {
+  let statsSchoolId;
+
+  beforeAll(async () => {
+    const schoolRes = await request
+      .post("/api/school/createSchool")
+      .set("token", adminToken)
+      .send({ name: "Stats School" });
+    statsSchoolId = schoolRes.body.data.school._id;
+
+    const crRes = await request
+      .post("/api/classroom/createClassroom")
+      .set("token", adminToken)
+      .send({ name: "Room A", schoolId: statsSchoolId, capacity: 30 });
+    const classroomId = crRes.body.data._id;
+
+    await request
+      .post("/api/classroom/createClassroom")
+      .set("token", adminToken)
+      .send({ name: "Room B", schoolId: statsSchoolId, capacity: 20 });
+
+    await request
+      .post("/api/student/createStudent")
+      .set("token", adminToken)
+      .send({ name: "Alice", schoolId: statsSchoolId, classroomId });
+    await request
+      .post("/api/student/createStudent")
+      .set("token", adminToken)
+      .send({ name: "Bob", schoolId: statsSchoolId, classroomId });
+    await request
+      .post("/api/student/createStudent")
+      .set("token", adminToken)
+      .send({ name: "Charlie", schoolId: statsSchoolId });
+  });
+
+  it("should return school stats with classroom breakdown", async () => {
+    const res = await request
+      .get("/api/school/getSchoolStats")
+      .query({ schoolId: statsSchoolId })
+      .set("token", adminToken);
+
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
+
+    const data = res.body.data;
+    expect(data.name).toBe("Stats School");
+    expect(data.totalClassrooms).toBe(2);
+    expect(data.totalStudents).toBe(3);
+    expect(data.unassignedStudents).toBe(1);
+    expect(data.classrooms).toHaveLength(2);
+
+    const roomA = data.classrooms.find((c) => c.name === "Room A");
+    expect(roomA.studentCount).toBe(2);
+    expect(roomA.capacity).toBe(30);
+    expect(roomA.utilization).toBeCloseTo(6.7, 0);
+
+    const roomB = data.classrooms.find((c) => c.name === "Room B");
+    expect(roomB.studentCount).toBe(0);
+    expect(roomB.utilization).toBe(0);
+  });
+
+  it("should return error for missing schoolId", async () => {
+    const res = await request
+      .get("/api/school/getSchoolStats")
+      .set("token", adminToken);
+
+    expect(res.status).toBe(400);
+    expect(res.body.ok).toBe(false);
+  });
+
+  it("should return error for non-existent school", async () => {
+    const res = await request
+      .get("/api/school/getSchoolStats")
+      .query({ schoolId: "000000000000000000000000" })
+      .set("token", adminToken);
+
+    expect(res.status).toBe(400);
+    expect(res.body.ok).toBe(false);
+  });
+});
+
 describe("PUT /api/school/updateSchool", () => {
   it("should update school fields", async () => {
     const res = await request

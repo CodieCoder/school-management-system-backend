@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const School = require("./school.mongoModel");
 const Role = require("../role/role.mongoModel");
 const SchoolMembership = require("../school_membership/school_membership.mongoModel");
@@ -15,6 +16,7 @@ module.exports = class SchoolManager {
       "post=createSchool",
       "get=getSchool",
       "get=getSchools",
+      "get=getSchoolStats",
       "put=updateSchool",
       "delete=deleteSchool",
       "post=addMember",
@@ -70,6 +72,96 @@ module.exports = class SchoolManager {
       .map((m) => m.schoolId);
 
     return School.find({ _id: { $in: schoolIds } }).lean();
+  }
+
+  async getSchoolStats({ __auth, __query }) {
+    const { schoolId } = __query || {};
+    if (!schoolId) return { error: "schoolId is required" };
+
+    if (!__auth.isSuper && !this.role.hasPermission(__auth, schoolId, "school:read")) {
+      return { error: "permission denied" };
+    }
+
+    const pipeline = [
+      { $match: { _id: new mongoose.Types.ObjectId(schoolId) } },
+      {
+        $lookup: {
+          from: "classrooms",
+          localField: "_id",
+          foreignField: "schoolId",
+          as: "classrooms",
+        },
+      },
+      {
+        $lookup: {
+          from: "students",
+          localField: "_id",
+          foreignField: "schoolId",
+          as: "students",
+        },
+      },
+      {
+        $addFields: {
+          totalClassrooms: { $size: "$classrooms" },
+          totalStudents: { $size: "$students" },
+          unassignedStudents: {
+            $size: {
+              $filter: {
+                input: "$students",
+                cond: { $eq: ["$$this.classroomId", null] },
+              },
+            },
+          },
+          classrooms: {
+            $map: {
+              input: "$classrooms",
+              as: "c",
+              in: {
+                _id: "$$c._id",
+                name: "$$c.name",
+                capacity: "$$c.capacity",
+                studentCount: {
+                  $size: {
+                    $filter: {
+                      input: "$students",
+                      cond: { $eq: ["$$this.classroomId", "$$c._id"] },
+                    },
+                  },
+                },
+                utilization: {
+                  $round: [
+                    {
+                      $multiply: [
+                        {
+                          $divide: [
+                            {
+                              $size: {
+                                $filter: {
+                                  input: "$students",
+                                  cond: { $eq: ["$$this.classroomId", "$$c._id"] },
+                                },
+                              },
+                            },
+                            { $max: ["$$c.capacity", 1] },
+                          ],
+                        },
+                        100,
+                      ],
+                    },
+                    1,
+                  ],
+                },
+              },
+            },
+          },
+        },
+      },
+      { $project: { students: 0 } },
+    ];
+
+    const results = await School.aggregate(pipeline);
+    if (!results.length) return { error: "school not found" };
+    return results[0];
   }
 
   async updateSchool({ __auth, schoolId, name, address, phone }) {
