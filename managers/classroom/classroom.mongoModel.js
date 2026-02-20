@@ -8,7 +8,7 @@ const ClassroomSchema = new mongoose.Schema(
       ref: "School",
       required: true,
     },
-    capacity: { type: Number, default: 30 },
+    capacity: { type: Number, default: 30, min: 1 },
   },
   { timestamps: true },
 );

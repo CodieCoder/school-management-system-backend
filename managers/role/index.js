@@ -153,6 +153,16 @@ module.exports = class RoleManager {
     }
 
     const SchoolMembership = require("../school_membership/school_membership.mongoModel");
+
+    const callerMembership = await SchoolMembership.findOne({
+      userId: __auth.userId,
+      schoolId: role.schoolId,
+      roleId: role._id,
+    });
+    if (callerMembership) {
+      return { error: "cannot delete a role you are currently assigned to" };
+    }
+
     await SchoolMembership.deleteMany({ roleId: role._id });
 
     await role.deleteOne();

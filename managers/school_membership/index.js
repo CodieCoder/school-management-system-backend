@@ -1,7 +1,6 @@
 const SchoolMembership = require("./school_membership.mongoModel");
 
 module.exports = class SchoolMembershipManager {
-  constructor() {}
 
   async create({ userId, schoolId, roleId }) {
     const existing = await SchoolMembership.findOne({ userId, schoolId });

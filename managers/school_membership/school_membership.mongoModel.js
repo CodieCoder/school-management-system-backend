@@ -24,5 +24,6 @@ const SchoolMembershipSchema = new mongoose.Schema(
 SchoolMembershipSchema.index({ userId: 1, schoolId: 1 }, { unique: true });
 SchoolMembershipSchema.index({ schoolId: 1 });
 SchoolMembershipSchema.index({ userId: 1 });
+SchoolMembershipSchema.index({ roleId: 1 });
 
 module.exports = mongoose.model("SchoolMembership", SchoolMembershipSchema);

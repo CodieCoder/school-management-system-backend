@@ -269,6 +269,49 @@ describe("Role CRUD", () => {
     expect(res.body.message).toMatch(/system role/i);
   });
 
+  it("should reject deleting a role the caller is assigned to", async () => {
+    const managerRole = await request
+      .post("/api/role/createRole")
+      .set("token", adminToken)
+      .send({
+        schoolId,
+        name: "self-delete-test",
+        permissions: ["school:read", "school:manage_roles"],
+      });
+    const managerRoleId = managerRole.body.data._id;
+
+    const regRes = await request
+      .post("/api/auth/register")
+      .set("token", adminToken)
+      .send({
+        email: "self-delete@test.com",
+        password: "password123",
+        displayName: "Self Delete Tester",
+      });
+    const testUserId = regRes.body.data.user._id;
+
+    await request
+      .post("/api/school/addMember")
+      .set("token", adminToken)
+      .send({ schoolId, userId: testUserId, roleId: managerRoleId });
+
+    const testToken = await loginAs("self-delete@test.com", "password123");
+
+    const res = await request
+      .delete("/api/role/deleteRole")
+      .set("token", testToken)
+      .send({ roleId: managerRoleId });
+
+    expect(res.status).toBe(400);
+    expect(res.body.ok).toBe(false);
+    expect(res.body.message).toMatch(/currently assigned/i);
+
+    await request
+      .delete("/api/role/deleteRole")
+      .set("token", adminToken)
+      .send({ roleId: managerRoleId });
+  });
+
   it("should delete a custom role", async () => {
     const res = await request
       .delete("/api/role/deleteRole")

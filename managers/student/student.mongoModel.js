@@ -19,8 +19,7 @@ const StudentSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-StudentSchema.index({ schoolId: 1 });
-StudentSchema.index({ classroomId: 1 });
+StudentSchema.index({ schoolId: 1, classroomId: 1 });
 StudentSchema.index(
   { email: 1 },
   {
