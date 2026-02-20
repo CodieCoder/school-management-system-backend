@@ -27,6 +27,8 @@ module.exports = class AuthManager {
     }
 
     async login({ email, password }) {
+        if (!email || !password) return { error: 'email and password are required' };
+
         let result = await this.validators.login({ email, password });
         if (result) return result;
 
@@ -46,6 +48,9 @@ module.exports = class AuthManager {
     }
 
     async register({ __auth, email, password, displayName }) {
+        if (!email || !password || !displayName) return { error: 'email, password, and displayName are required' };
+        if (password.length < 8) return { error: 'password must be at least 8 characters' };
+
         let result = await this.validators.register({ email, password, displayName });
         if (result) return result;
 
