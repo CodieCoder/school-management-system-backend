@@ -28,6 +28,7 @@ module.exports = class UserServer {
 
   /** set up express middleware and routes without listening */
   configure() {
+    this.app.set("trust proxy", 1);
     this.app.use(helmet());
     this.app.use(cors({ origin: "*" }));
     // this.app.use(express.json({ limit: "50kb" }));
