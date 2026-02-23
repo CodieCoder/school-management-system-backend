@@ -182,6 +182,48 @@ List schools the authenticated user is a member of. Superadmins see all.
 
 ---
 
+### GET `/school/getSchoolStats`
+
+Returns school dashboard stats including classroom breakdown, student/resource counts, and capacity utilization.
+
+**Auth:** Token with `school:read` for this school (or superadmin)
+
+| Field | Type | Source |
+|-------|------|--------|
+| `schoolId` | string | query |
+
+**Response:**
+
+```json
+{
+  "ok": true,
+  "data": {
+    "_id": "64b...",
+    "name": "Springfield Elementary",
+    "address": "",
+    "phone": "",
+    "totalClassrooms": 2,
+    "totalStudents": 15,
+    "unassignedStudents": 3,
+    "totalResources": 8,
+    "activeResources": 6,
+    "schoolWideResources": 2,
+    "classrooms": [
+      {
+        "_id": "64c...",
+        "name": "Room A",
+        "capacity": 30,
+        "studentCount": 12,
+        "resourceCount": 4,
+        "utilization": 40.0
+      }
+    ]
+  }
+}
+```
+
+---
+
 ### PUT `/school/updateSchool`
 
 **Auth:** Token with `school:update` for this school
@@ -430,14 +472,15 @@ List students for a school, optionally filtered by classroom.
 
 ### POST `/student/transferStudent`
 
-Transfer a student from one school to another. Removes classroom assignment.
+Transfer a student from one school to another. Clears classroom assignment unless `newClassroomId` is provided.
 
-**Auth:** Token with `student:transfer` for the **source** school
+**Auth:** Token with `student:transfer` for **both** the source and target school (or superadmin)
 
-| Field | Type | Required |
-|-------|------|----------|
-| `studentId` | string | yes |
-| `toSchoolId` | string | yes |
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `studentId` | string | yes | Student to transfer |
+| `newSchoolId` | string | yes | Target school |
+| `newClassroomId` | string | no | Classroom in target school |
 
 ---
 
@@ -451,6 +494,74 @@ Transfer a student from one school to another. Removes classroom assignment.
 
 ---
 
+## Resources
+
+### POST `/resource/createResource`
+
+Create a school-wide resource (no `classroomId`) or a classroom-specific resource.
+
+**Auth:** Token with `resource:create` for this school
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | yes | Resource name |
+| `schoolId` | string | yes | Target school |
+| `classroomId` | string | no | `null` = school-wide |
+| `quantity` | number | no | Defaults to 1 |
+| `description` | string | no | Resource description |
+| `extraData` | object | no | Arbitrary metadata |
+
+---
+
+### GET `/resource/getResource`
+
+**Auth:** Token with `resource:read` for this school
+
+| Field | Type | Source |
+|-------|------|--------|
+| `resourceId` | string | query |
+
+---
+
+### GET `/resource/getResources`
+
+List resources for a school. Filter by `classroomId` to get classroom-specific resources, or `classroomId=null` for school-wide only.
+
+**Auth:** Token with `resource:read` for this school
+
+| Field | Type | Source | Required |
+|-------|------|--------|----------|
+| `schoolId` | string | query | yes |
+| `classroomId` | string | query | no |
+
+---
+
+### PUT `/resource/updateResource`
+
+**Auth:** Token with `resource:update` for this school
+
+| Field | Type | Required |
+|-------|------|----------|
+| `resourceId` | string | yes |
+| `name` | string | no |
+| `classroomId` | string | no |
+| `isActive` | boolean | no |
+| `quantity` | number | no |
+| `description` | string | no |
+| `extraData` | object | no |
+
+---
+
+### DELETE `/resource/deleteResource`
+
+**Auth:** Token with `resource:delete` for this school
+
+| Field | Type | Required |
+|-------|------|----------|
+| `resourceId` | string | yes |
+
+---
+
 ## Endpoint Summary
 
 | Method | Endpoint | Permission |
@@ -461,6 +572,7 @@ Transfer a student from one school to another. Removes classroom assignment.
 | POST | `/school/createSchool` | Authenticated |
 | GET | `/school/getSchool` | `school:read` (scoped) |
 | GET | `/school/getSchools` | Authenticated |
+| GET | `/school/getSchoolStats` | `school:read` (scoped) |
 | PUT | `/school/updateSchool` | `school:update` (scoped) |
 | DELETE | `/school/deleteSchool` | `school:delete` (scoped) |
 | POST | `/school/addMember` | `school:manage_members` (scoped) |
@@ -474,8 +586,13 @@ Transfer a student from one school to another. Removes classroom assignment.
 | GET | `/student/getStudent` | `student:read` (scoped) |
 | GET | `/student/getStudents` | `student:read` (scoped) |
 | PUT | `/student/updateStudent` | `student:update` (scoped) |
-| POST | `/student/transferStudent` | `student:transfer` (scoped) |
+| POST | `/student/transferStudent` | `student:transfer` (scoped, both schools) |
 | DELETE | `/student/deleteStudent` | `student:delete` (scoped) |
+| POST | `/resource/createResource` | `resource:create` (scoped) |
+| GET | `/resource/getResource` | `resource:read` (scoped) |
+| GET | `/resource/getResources` | `resource:read` (scoped) |
+| PUT | `/resource/updateResource` | `resource:update` (scoped) |
+| DELETE | `/resource/deleteResource` | `resource:delete` (scoped) |
 | POST | `/role/createRole` | `school:manage_roles` (scoped) |
 | GET | `/role/getRoles` | Membership in school |
 | PUT | `/role/updateRole` | `school:manage_roles` (scoped) |

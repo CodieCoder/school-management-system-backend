@@ -27,8 +27,10 @@ module.exports = class ResourceManager {
     description,
     extraData,
   }) {
-    if (!name || name.trim().length < 1) return { error: "name is required" };
-    if (!schoolId) return { error: "schoolId is required" };
+    if (!name || name.trim().length < 1)
+      return appError("name is required", ERROR_CODES.VALIDATION);
+    if (!schoolId)
+      return appError("schoolId is required", ERROR_CODES.VALIDATION);
 
     let result = await this.validators.createResource({ name, schoolId });
     if (result) return result;
@@ -41,7 +43,10 @@ module.exports = class ResourceManager {
       const classroom = await Classroom.findById(classroomId);
       if (!classroom) return appError("classroom not found", ERROR_CODES.NOT_FOUND);
       if (classroom.schoolId.toString() !== schoolId.toString()) {
-        return { error: "classroom does not belong to this school" };
+        return appError(
+          "classroom does not belong to this school",
+          ERROR_CODES.VALIDATION,
+        );
       }
     }
 
@@ -60,7 +65,8 @@ module.exports = class ResourceManager {
 
   async getResource({ __auth, __query }) {
     const { resourceId } = __query || {};
-    if (!resourceId) return { error: "resourceId is required" };
+    if (!resourceId)
+      return appError("resourceId is required", ERROR_CODES.VALIDATION);
 
     const resource = await Resource.findById(resourceId)
       .populate("classroomId", "name")
@@ -77,7 +83,8 @@ module.exports = class ResourceManager {
   async getResources({ __auth, __query }) {
     const query = __query || {};
     const { schoolId, classroomId } = query;
-    if (!schoolId) return { error: "schoolId is required" };
+    if (!schoolId)
+      return appError("schoolId is required", ERROR_CODES.VALIDATION);
 
     if (!this.role.hasPermission(__auth, schoolId, "resource:read")) {
       return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
@@ -106,7 +113,8 @@ module.exports = class ResourceManager {
     description,
     extraData,
   }) {
-    if (!resourceId) return { error: "resourceId is required" };
+    if (!resourceId)
+      return appError("resourceId is required", ERROR_CODES.VALIDATION);
 
     const resource = await Resource.findById(resourceId);
     if (!resource) return appError("resource not found", ERROR_CODES.NOT_FOUND);
@@ -124,7 +132,10 @@ module.exports = class ResourceManager {
         const classroom = await Classroom.findById(classroomId);
         if (!classroom) return appError("classroom not found", ERROR_CODES.NOT_FOUND);
         if (classroom.schoolId.toString() !== resource.schoolId.toString()) {
-          return { error: "classroom does not belong to this school" };
+          return appError(
+            "classroom does not belong to this school",
+            ERROR_CODES.VALIDATION,
+          );
         }
         resource.classroomId = classroomId;
       }
@@ -141,7 +152,8 @@ module.exports = class ResourceManager {
   }
 
   async deleteResource({ __auth, resourceId }) {
-    if (!resourceId) return { error: "resourceId is required" };
+    if (!resourceId)
+      return appError("resourceId is required", ERROR_CODES.VALIDATION);
 
     const resource = await Resource.findById(resourceId);
     if (!resource) return appError("resource not found", ERROR_CODES.NOT_FOUND);

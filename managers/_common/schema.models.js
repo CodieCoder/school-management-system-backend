@@ -121,6 +121,26 @@ module.exports = {
     type: "string",
     length: { min: 1, max: 50 },
   },
+  classroomId: {
+    path: "classroomId",
+    type: "string",
+    length: { min: 1, max: 50 },
+  },
+  studentId: {
+    path: "studentId",
+    type: "string",
+    length: { min: 1, max: 50 },
+  },
+  resourceId: {
+    path: "resourceId",
+    type: "string",
+    length: { min: 1, max: 50 },
+  },
+  newSchoolId: {
+    path: "newSchoolId",
+    type: "string",
+    length: { min: 1, max: 50 },
+  },
   permissions: {
     path: "permissions",
     type: "Array",

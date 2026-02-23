@@ -27,9 +27,11 @@ module.exports = class ClassroomManager {
   }
 
   async createClassroom({ __auth, name, schoolId, capacity }) {
-    if (!name || name.trim().length < 1) return { error: "name is required" };
+    if (!name || name.trim().length < 1)
+      return appError("name is required", ERROR_CODES.VALIDATION);
     schoolId = this._resolveSchoolId(__auth, schoolId);
-    if (!schoolId) return { error: "schoolId is required" };
+    if (!schoolId)
+      return appError("schoolId is required", ERROR_CODES.VALIDATION);
 
     let result = await this.validators.createClassroom({ name, schoolId });
     if (result) return result;
@@ -53,7 +55,8 @@ module.exports = class ClassroomManager {
 
   async getClassroom({ __auth, __query }) {
     const { classroomId } = __query || {};
-    if (!classroomId) return { error: "classroomId is required" };
+    if (!classroomId)
+      return appError("classroomId is required", ERROR_CODES.VALIDATION);
 
     const classroom = await Classroom.findById(classroomId).lean();
     if (!classroom) return appError("classroom not found", ERROR_CODES.NOT_FOUND);
@@ -71,7 +74,8 @@ module.exports = class ClassroomManager {
     const query = __query || {};
     let { schoolId } = query;
     schoolId = this._resolveSchoolId(__auth, schoolId);
-    if (!schoolId) return { error: "schoolId is required" };
+    if (!schoolId)
+      return appError("schoolId is required", ERROR_CODES.VALIDATION);
 
     if (!this.role.hasPermission(__auth, schoolId, "classroom:read")) {
       return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
@@ -83,7 +87,8 @@ module.exports = class ClassroomManager {
   }
 
   async updateClassroom({ __auth, classroomId, name, capacity }) {
-    if (!classroomId) return { error: "classroomId is required" };
+    if (!classroomId)
+      return appError("classroomId is required", ERROR_CODES.VALIDATION);
 
     const classroom = await Classroom.findById(classroomId);
     if (!classroom) return appError("classroom not found", ERROR_CODES.NOT_FOUND);
@@ -110,7 +115,8 @@ module.exports = class ClassroomManager {
   }
 
   async deleteClassroom({ __auth, classroomId }) {
-    if (!classroomId) return { error: "classroomId is required" };
+    if (!classroomId)
+      return appError("classroomId is required", ERROR_CODES.VALIDATION);
 
     const classroom = await Classroom.findById(classroomId);
     if (!classroom) return appError("classroom not found", ERROR_CODES.NOT_FOUND);

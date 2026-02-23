@@ -28,7 +28,8 @@ module.exports = class SchoolManager {
   }
 
   async createSchool({ __auth, name, address, phone }) {
-    if (!name || name.trim().length < 1) return { error: "name is required" };
+    if (!name || name.trim().length < 1)
+      return appError("name is required", ERROR_CODES.VALIDATION);
 
     let result = await this.validators.createSchool({ name });
     if (result) return result;
@@ -51,7 +52,8 @@ module.exports = class SchoolManager {
 
   async getSchool({ __auth, __query }) {
     const { schoolId } = __query || {};
-    if (!schoolId) return { error: "schoolId is required" };
+    if (!schoolId)
+      return appError("schoolId is required", ERROR_CODES.VALIDATION);
 
     if (
       !__auth.isSuper &&
@@ -81,9 +83,10 @@ module.exports = class SchoolManager {
 
   async getSchoolStats({ __auth, __query }) {
     const { schoolId } = __query || {};
-    if (!schoolId) return { error: "schoolId is required" };
+    if (!schoolId)
+      return appError("schoolId is required", ERROR_CODES.VALIDATION);
     if (!mongoose.Types.ObjectId.isValid(schoolId)) {
-      return { error: "Invalid schoolId" };
+      return appError("invalid schoolId", ERROR_CODES.INVALID_ID);
     }
 
     if (
@@ -228,7 +231,8 @@ module.exports = class SchoolManager {
   }
 
   async deleteSchool({ __auth, schoolId }) {
-    if (!schoolId) return { error: "schoolId is required" };
+    if (!schoolId)
+      return appError("schoolId is required", ERROR_CODES.VALIDATION);
 
     if (!this.role.hasPermission(__auth, schoolId, "school:delete")) {
       return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
@@ -251,7 +255,10 @@ module.exports = class SchoolManager {
 
   async addMember({ __auth, schoolId, userId, roleId }) {
     if (!schoolId || !userId || !roleId) {
-      return { error: "schoolId, userId, and roleId are required" };
+      return appError(
+        "schoolId, userId, and roleId are required",
+        ERROR_CODES.VALIDATION,
+      );
     }
 
     if (!this.role.hasPermission(__auth, schoolId, "school:manage_members")) {
@@ -259,12 +266,16 @@ module.exports = class SchoolManager {
     }
 
     const targetRole = await Role.findById(roleId);
-    if (!targetRole) return { error: "role not found" };
+    if (!targetRole)
+      return appError("role not found", ERROR_CODES.NOT_FOUND);
     if (
       !targetRole.schoolId ||
       targetRole.schoolId.toString() !== schoolId.toString()
     ) {
-      return { error: "role does not belong to this school" };
+      return appError(
+        "role does not belong to this school",
+        ERROR_CODES.VALIDATION,
+      );
     }
 
     const result = await this.schoolMembership.create({
@@ -279,7 +290,10 @@ module.exports = class SchoolManager {
 
   async removeMember({ __auth, schoolId, userId }) {
     if (!schoolId || !userId) {
-      return { error: "schoolId and userId are required" };
+      return appError(
+        "schoolId and userId are required",
+        ERROR_CODES.VALIDATION,
+      );
     }
 
     if (!this.role.hasPermission(__auth, schoolId, "school:manage_members")) {
@@ -287,7 +301,10 @@ module.exports = class SchoolManager {
     }
 
     if (userId.toString() === __auth.userId.toString()) {
-      return { error: "cannot remove yourself from school" };
+      return appError(
+        "cannot remove yourself from school",
+        ERROR_CODES.VALIDATION,
+      );
     }
 
     return this.schoolMembership.remove({ userId, schoolId });

@@ -26,7 +26,7 @@ module.exports = class AuthManager {
 
   async login({ email, password }) {
     if (!email || !password)
-      return { error: "email and password are required" };
+      return appError("email and password are required", ERROR_CODES.VALIDATION);
 
     let result = await this.validators.login({ email, password });
     if (result) return result;
@@ -37,7 +37,7 @@ module.exports = class AuthManager {
     const user = await this.userManager.getByAuthId({
       authId: authResult.authId,
     });
-    if (!user) return { error: "user not found" };
+    if (!user) return appError("user not found", ERROR_CODES.NOT_FOUND);
 
     const memberships = await this.schoolMembership.getMemberships({
       userId: user._id,
@@ -52,9 +52,15 @@ module.exports = class AuthManager {
 
   async register({ __auth, email, password, displayName }) {
     if (!email || !password || !displayName)
-      return { error: "email, password, and displayName are required" };
+      return appError(
+        "email, password, and displayName are required",
+        ERROR_CODES.VALIDATION,
+      );
     if (password.length < 8)
-      return { error: "password must be at least 8 characters" };
+      return appError(
+        "password must be at least 8 characters",
+        ERROR_CODES.VALIDATION,
+      );
 
     let result = await this.validators.register({
       email,
@@ -78,7 +84,7 @@ module.exports = class AuthManager {
       });
     } catch (err) {
       await this.adapter.deleteUser({ authId: authResult.authId });
-      return { error: "failed to create user profile" };
+      return appError("failed to create user profile", ERROR_CODES.INTERNAL);
     }
 
     return {
