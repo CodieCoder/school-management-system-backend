@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const mongoosePaginate = require("mongoose-paginate-v2");
 
 const ResourceSchema = new mongoose.Schema(
   {
@@ -23,5 +24,6 @@ const ResourceSchema = new mongoose.Schema(
 
 ResourceSchema.index({ schoolId: 1, classroomId: 1, name: 1 }, { unique: true });
 ResourceSchema.index({ schoolId: 1, isActive: 1 });
+ResourceSchema.plugin(mongoosePaginate);
 
 module.exports = mongoose.model("Resource", ResourceSchema);
