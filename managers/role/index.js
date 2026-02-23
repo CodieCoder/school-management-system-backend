@@ -89,7 +89,10 @@ module.exports = class RoleManager {
     for (const key of permissions) {
       if (key.includes("*")) continue;
       if (!this.permission.isValidKey(key)) {
-        return { error: `invalid permission key: ${key}` };
+        return appError(
+          `invalid permission key: ${key}`,
+          ERROR_CODES.VALIDATION,
+        );
       }
     }
 
@@ -107,13 +110,17 @@ module.exports = class RoleManager {
 
   async getRoles({ __auth, __query }) {
     const { schoolId } = __query || {};
-    if (!schoolId) return { error: "schoolId is required" };
+    if (!schoolId)
+      return appError("schoolId is required", ERROR_CODES.VALIDATION);
 
     const membership = __auth.memberships.find(
       (m) => m.schoolId && m.schoolId.toString() === schoolId.toString(),
     );
     if (!membership && !__auth.isSuper)
-      return { error: "not a member of this school" };
+      return appError(
+        "not a member of this school",
+        ERROR_CODES.PERMISSION_DENIED,
+      );
 
     const roles = await Role.find({ schoolId }).lean();
     return roles;
@@ -125,7 +132,8 @@ module.exports = class RoleManager {
 
     const role = await Role.findById(roleId);
     if (!role) return appError("role not found", ERROR_CODES.NOT_FOUND);
-    if (role.isSystem) return { error: "cannot modify system role" };
+    if (role.isSystem)
+      return appError("cannot modify system role", ERROR_CODES.VALIDATION);
 
     if (!this.hasPermission(__auth, role.schoolId, "school:manage_roles")) {
       return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
@@ -135,7 +143,10 @@ module.exports = class RoleManager {
       for (const key of permissions) {
         if (key.includes("*")) continue;
         if (!this.permission.isValidKey(key)) {
-          return { error: `invalid permission key: ${key}` };
+          return appError(
+            `invalid permission key: ${key}`,
+            ERROR_CODES.VALIDATION,
+          );
         }
       }
     }
@@ -152,7 +163,8 @@ module.exports = class RoleManager {
   async deleteRole({ __auth, roleId }) {
     const role = await Role.findById(roleId);
     if (!role) return appError("role not found", ERROR_CODES.NOT_FOUND);
-    if (role.isSystem) return { error: "cannot delete system role" };
+    if (role.isSystem)
+      return appError("cannot delete system role", ERROR_CODES.VALIDATION);
 
     if (!this.hasPermission(__auth, role.schoolId, "school:manage_roles")) {
       return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
@@ -164,7 +176,10 @@ module.exports = class RoleManager {
       roleId: role._id,
     });
     if (callerMembership) {
-      return { error: "cannot delete a role you are currently assigned to" };
+      return appError(
+        "cannot delete a role you are currently assigned to",
+        ERROR_CODES.VALIDATION,
+      );
     }
 
     await this.authCacheInvalidator.invalidateByRoleId(role._id);

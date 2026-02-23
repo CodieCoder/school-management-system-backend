@@ -1,4 +1,5 @@
 const User = require("./user.mongoModel");
+const { appError, ERROR_CODES } = require("../../libs/AppError");
 
 module.exports = class UserManager {
   constructor({ managers }) {
@@ -20,7 +21,7 @@ module.exports = class UserManager {
 
   async getProfile({ __auth }) {
     const user = await User.findById(__auth.userId).lean();
-    if (!user) return { error: "user not found" };
+    if (!user) return appError("user not found", ERROR_CODES.NOT_FOUND);
 
     return {
       ...user,

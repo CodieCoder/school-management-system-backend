@@ -341,6 +341,95 @@ describe("GET /api/permission/getPermissions", () => {
   });
 });
 
+describe("Cross-school isolation", () => {
+  let otherSchoolId;
+
+  beforeAll(async () => {
+    const res = await request
+      .post("/api/school/createSchool")
+      .set("token", adminToken)
+      .send({ name: "Other School (RBAC)" });
+    otherSchoolId = res.body.data.school._id;
+  });
+
+  it("user cannot read a school they have no membership in", async () => {
+    const res = await request
+      .get("/api/school/getSchool")
+      .query({ schoolId: otherSchoolId })
+      .set("token", limitedToken);
+
+    expect(res.status).toBe(403);
+    expect(res.body.ok).toBe(false);
+    expect(res.body.message).toMatch(/permission denied/i);
+  });
+
+  it("user cannot create a classroom in another school", async () => {
+    const res = await request
+      .post("/api/classroom/createClassroom")
+      .set("token", limitedToken)
+      .send({ name: "Cross-school Room", schoolId: otherSchoolId });
+
+    expect(res.status).toBe(403);
+    expect(res.body.ok).toBe(false);
+    expect(res.body.message).toMatch(/permission denied/i);
+  });
+
+  it("user cannot create a student in another school", async () => {
+    const res = await request
+      .post("/api/student/createStudent")
+      .set("token", limitedToken)
+      .send({ name: "Cross-school Student", schoolId: otherSchoolId });
+
+    expect(res.status).toBe(403);
+    expect(res.body.ok).toBe(false);
+    expect(res.body.message).toMatch(/permission denied/i);
+  });
+
+  it("user cannot list classrooms of another school", async () => {
+    const res = await request
+      .get("/api/classroom/getClassrooms")
+      .query({ schoolId: otherSchoolId })
+      .set("token", limitedToken);
+
+    expect(res.status).toBe(403);
+    expect(res.body.ok).toBe(false);
+    expect(res.body.message).toMatch(/permission denied/i);
+  });
+
+  it("user cannot list students of another school", async () => {
+    const res = await request
+      .get("/api/student/getStudents")
+      .query({ schoolId: otherSchoolId })
+      .set("token", limitedToken);
+
+    expect(res.status).toBe(403);
+    expect(res.body.ok).toBe(false);
+    expect(res.body.message).toMatch(/permission denied/i);
+  });
+
+  it("user cannot list resources of another school", async () => {
+    const res = await request
+      .get("/api/resource/getResources")
+      .query({ schoolId: otherSchoolId })
+      .set("token", limitedToken);
+
+    expect(res.status).toBe(403);
+    expect(res.body.ok).toBe(false);
+    expect(res.body.message).toMatch(/permission denied/i);
+  });
+
+  it("user cannot list roles of another school", async () => {
+    const res = await request
+      .get("/api/role/getRoles")
+      .query({ schoolId: otherSchoolId })
+      .set("token", limitedToken);
+
+    expect(res.status).toBe(403);
+    expect(res.body.ok).toBe(false);
+    expect(res.body.message).toMatch(/not a member|permission denied/i);
+  });
+});
+
 describe("Superadmin bypass", () => {
   it("superadmin can access any school even without membership", async () => {
     const otherSchoolRes = await request

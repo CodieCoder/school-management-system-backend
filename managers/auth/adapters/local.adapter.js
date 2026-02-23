@@ -31,10 +31,12 @@ module.exports = class LocalAuthAdapter {
 
   async login({ email, password }) {
     const identity = await AuthIdentity.findOne({ email: email.toLowerCase() });
-    if (!identity) return { error: "invalid credentials" };
+    if (!identity)
+      return appError("invalid credentials", ERROR_CODES.UNAUTHORIZED);
 
     const match = await bcrypt.compare(password, identity.password);
-    if (!match) return { error: "invalid credentials" };
+    if (!match)
+      return appError("invalid credentials", ERROR_CODES.UNAUTHORIZED);
 
     const token = this._signToken({ authId: identity.authId });
     return { authId: identity.authId, email: identity.email, token };

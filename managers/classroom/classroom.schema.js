@@ -3,5 +3,5 @@ module.exports = {
     { model: "name", required: true },
     { model: "schoolId", required: true },
   ],
-  updateClassroom: [{ model: "id", required: true }],
+  updateClassroom: [{ model: "classroomId", required: true }],
 };

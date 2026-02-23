@@ -29,7 +29,7 @@ describe("POST /api/auth/login", () => {
       password: "wrongpassword",
     });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(401);
     expect(res.body.ok).toBe(false);
     expect(res.body.message).toMatch(/invalid credentials/i);
   });
@@ -40,7 +40,7 @@ describe("POST /api/auth/login", () => {
       password: "whatever",
     });
 
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(401);
     expect(res.body.ok).toBe(false);
   });
 

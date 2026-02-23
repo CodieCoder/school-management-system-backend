@@ -31,7 +31,7 @@ module.exports = class UserServer {
     this.app.set("trust proxy", 1);
     this.app.use(helmet());
     this.app.use(cors({ origin: "*" }));
-    // this.app.use(express.json({ limit: "50kb" }));
+    this.app.use(express.json({ limit: "50kb" }));
     this.app.use(express.urlencoded({ extended: true, limit: "50kb" }));
     this.app.use(mongoSanitize());
     this.app.use((req, _res, next) => {

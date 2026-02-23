@@ -6,7 +6,6 @@ module.exports = class MongoLoader {
   }
 
   load() {
-    /** load Mongo Models */
     const models = loader(`./managers/**/*.${this.schemaExtension}`);
     return models;
   }

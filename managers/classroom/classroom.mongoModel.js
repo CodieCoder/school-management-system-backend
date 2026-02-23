@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const mongoosePaginate = require("mongoose-paginate-v2");
 
 const ClassroomSchema = new mongoose.Schema(
   {
@@ -15,5 +16,6 @@ const ClassroomSchema = new mongoose.Schema(
 
 ClassroomSchema.index({ schoolId: 1 });
 ClassroomSchema.index({ schoolId: 1, name: 1 }, { unique: true });
+ClassroomSchema.plugin(mongoosePaginate);
 
 module.exports = mongoose.model("Classroom", ClassroomSchema);

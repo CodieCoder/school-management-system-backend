@@ -29,9 +29,11 @@ module.exports = class StudentManager {
   }
 
   async createStudent({ __auth, name, email, schoolId, classroomId }) {
-    if (!name || name.trim().length < 1) return { error: "name is required" };
+    if (!name || name.trim().length < 1)
+      return appError("name is required", ERROR_CODES.VALIDATION);
     schoolId = this._resolveSchoolId(__auth, schoolId);
-    if (!schoolId) return { error: "schoolId is required" };
+    if (!schoolId)
+      return appError("schoolId is required", ERROR_CODES.VALIDATION);
 
     let result = await this.validators.createStudent({ name, schoolId });
     if (result) return result;
@@ -49,7 +51,10 @@ module.exports = class StudentManager {
       const classroom = await Classroom.findById(classroomId);
       if (!classroom) return appError("classroom not found", ERROR_CODES.NOT_FOUND);
       if (classroom.schoolId.toString() !== schoolId.toString()) {
-        return { error: "classroom does not belong to this school" };
+        return appError(
+          "classroom does not belong to this school",
+          ERROR_CODES.VALIDATION,
+        );
       }
 
       const session = await mongoose.startSession();
@@ -89,7 +94,8 @@ module.exports = class StudentManager {
 
   async getStudent({ __auth, __query }) {
     const { studentId } = __query || {};
-    if (!studentId) return { error: "studentId is required" };
+    if (!studentId)
+      return appError("studentId is required", ERROR_CODES.VALIDATION);
 
     const student = await Student.findById(studentId)
       .populate("classroomId", "name")
@@ -107,7 +113,8 @@ module.exports = class StudentManager {
     const query = __query || {};
     let { schoolId, classroomId } = query;
     schoolId = this._resolveSchoolId(__auth, schoolId);
-    if (!schoolId) return { error: "schoolId is required" };
+    if (!schoolId)
+      return appError("schoolId is required", ERROR_CODES.VALIDATION);
 
     if (!this.role.hasPermission(__auth, schoolId, "student:read")) {
       return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
@@ -123,7 +130,8 @@ module.exports = class StudentManager {
   }
 
   async updateStudent({ __auth, studentId, name, email, classroomId }) {
-    if (!studentId) return { error: "studentId is required" };
+    if (!studentId)
+      return appError("studentId is required", ERROR_CODES.VALIDATION);
 
     const student = await Student.findById(studentId);
     if (!student) return appError("student not found", ERROR_CODES.NOT_FOUND);
@@ -154,7 +162,10 @@ module.exports = class StudentManager {
       const classroom = await Classroom.findById(classroomId);
       if (!classroom) return appError("classroom not found", ERROR_CODES.NOT_FOUND);
       if (classroom.schoolId.toString() !== student.schoolId.toString()) {
-        return { error: "classroom does not belong to this school" };
+        return appError(
+          "classroom does not belong to this school",
+          ERROR_CODES.VALIDATION,
+        );
       }
 
       if (String(student.classroomId) !== String(classroomId)) {
@@ -190,28 +201,51 @@ module.exports = class StudentManager {
 
   async transferStudent({ __auth, studentId, newSchoolId, newClassroomId }) {
     if (!studentId || !newSchoolId) {
-      return { error: "studentId and newSchoolId are required" };
-    }
-
-    if (!this.role.hasGlobalPermission(__auth, "student:transfer")) {
-      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
+      return appError(
+        "studentId and newSchoolId are required",
+        ERROR_CODES.VALIDATION,
+      );
     }
 
     const student = await Student.findById(studentId);
     if (!student) return appError("student not found", ERROR_CODES.NOT_FOUND);
 
+    if (
+      !this.role.hasPermission(
+        __auth,
+        student.schoolId,
+        "student:transfer",
+      )
+    ) {
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
+    }
+
     if (student.schoolId.toString() === newSchoolId.toString()) {
-      return { error: "cannot transfer to the same school" };
+      return appError(
+        "cannot transfer to the same school",
+        ERROR_CODES.VALIDATION,
+      );
     }
 
     const newSchool = await School.findById(newSchoolId);
-    if (!newSchool) return appError("target school not found", ERROR_CODES.NOT_FOUND);
+    if (!newSchool)
+      return appError("target school not found", ERROR_CODES.NOT_FOUND);
+
+    if (
+      !this.role.hasPermission(__auth, newSchoolId, "student:transfer")
+    ) {
+      return appError("permission denied", ERROR_CODES.PERMISSION_DENIED);
+    }
 
     if (newClassroomId) {
       const classroom = await Classroom.findById(newClassroomId);
-      if (!classroom) return { error: "target classroom not found" };
+      if (!classroom)
+        return appError("target classroom not found", ERROR_CODES.NOT_FOUND);
       if (classroom.schoolId.toString() !== newSchoolId.toString()) {
-        return { error: "classroom does not belong to target school" };
+        return appError(
+          "classroom does not belong to target school",
+          ERROR_CODES.VALIDATION,
+        );
       }
       student.classroomId = newClassroomId;
     } else {
@@ -225,7 +259,8 @@ module.exports = class StudentManager {
   }
 
   async deleteStudent({ __auth, studentId }) {
-    if (!studentId) return { error: "studentId is required" };
+    if (!studentId)
+      return appError("studentId is required", ERROR_CODES.VALIDATION);
 
     const student = await Student.findById(studentId);
     if (!student) return appError("student not found", ERROR_CODES.NOT_FOUND);

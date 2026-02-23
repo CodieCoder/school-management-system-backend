@@ -26,7 +26,8 @@ module.exports = class SchoolMembershipManager {
 
   async remove({ userId, schoolId }) {
     const membership = await SchoolMembership.findOne({ userId, schoolId });
-    if (!membership) return { error: "membership not found" };
+    if (!membership)
+      return appError("membership not found", ERROR_CODES.NOT_FOUND);
     await membership.deleteOne();
     if (this.authCacheInvalidator) {
       await this.authCacheInvalidator.invalidateByUserId(userId);

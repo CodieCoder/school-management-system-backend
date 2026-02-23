@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const mongoosePaginate = require("mongoose-paginate-v2");
 
 const StudentSchema = new mongoose.Schema(
   {
@@ -28,5 +29,6 @@ StudentSchema.index(
     partialFilterExpression: { email: { $ne: "" } },
   },
 );
+StudentSchema.plugin(mongoosePaginate);
 
 module.exports = mongoose.model("Student", StudentSchema);

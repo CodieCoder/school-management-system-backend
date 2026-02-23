@@ -185,7 +185,7 @@ module.exports = class PermissionManager {
     return this.permissionKeys.has(key);
   }
 
-  async getPermissions() {
+  async getPermissions({ __auth }) {
     const permissions = await Permission.find({}).lean();
     return permissions;
   }

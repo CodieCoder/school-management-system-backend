@@ -3,6 +3,9 @@ module.exports = {
     { model: "name", required: true },
     { model: "schoolId", required: true },
   ],
-  updateStudent: [{ model: "id", required: true }],
-  transferStudent: [{ model: "id", required: true }],
+  updateStudent: [{ model: "studentId", required: true }],
+  transferStudent: [
+    { model: "studentId", required: true },
+    { model: "newSchoolId", required: true },
+  ],
 };
